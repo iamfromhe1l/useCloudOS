@@ -1,0 +1,33 @@
+apiVersion: usecloud.io/v1
+kind: App
+metadata:
+  id: containers
+  name: Containers
+  version: 0.1.0
+  description: Manage existing Docker containers on this server
+  author: useCloudOS
+platform:
+  minVersion: 0.1.0
+  hostVersion: 1
+runtime:
+  type: native
+frontend:
+  type: web-component
+  entry: frontend/index.js
+  element: usecloud-containers-v0-1-0
+  styles: [frontend/style.css]
+backend:
+  type: native
+  executable: backend/containers-service
+  socket: containers.sock
+  routes:
+    - { method: GET, path: /docker/info, permission: docker.read }
+    - { method: GET, path: /containers, permission: docker.read }
+    - { method: GET, path: /containers/*, permission: docker.read }
+    - { method: POST, path: /containers/*, permission: docker.manage }
+navigation:
+  desktop: true
+  dock: true
+  icon: deployedCode
+  colorRole: primary
+permissions: [docker.read, docker.manage, background.run]

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+[ "$(uname -s)" = Linux ] || { echo "Docker smoke requires Linux." >&2; exit 1; }
+api_url="${CLOUD_CORE_URL:-http://127.0.0.1:8080}"
+container_name="cloud-core-smoke-$$"
+image="alpine:3.22"
+
+cleanup() {
+  docker rm -f "${container_name}" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT INT TERM
+
+if ! curl -fsS "${api_url}/api/v1/health" >/dev/null; then
+  echo "cloud-core is not reachable. Run 'make backend-run' in another terminal or 'make backend-install'." >&2
+  exit 1
+fi
+
+docker version >/dev/null
+docker run -d --name "${container_name}" "${image}" \
+  sh -c 'while :; do echo cloud-core-smoke; sleep 5; done' >/dev/null
+sleep 1
+
+curl -fsS "${api_url}/api/apps/containers/docker/info" | jq -e '.available == true' >/dev/null
+curl -fsS "${api_url}/api/apps/containers/containers" | \
+  jq -e --arg name "${container_name}" '.containers | any(.name == $name and .state == "running")' >/dev/null
+curl -fsS "${api_url}/api/apps/containers/containers/${container_name}" | \
+  jq -e --arg name "${container_name}" '.name == $name and .state == "running"' >/dev/null
+curl -fsS "${api_url}/api/apps/containers/containers/${container_name}/stats" | \
+  jq -e '.cpu_percent >= 0 and .memory.used_bytes >= 0' >/dev/null
+curl -fsS "${api_url}/api/apps/containers/containers/${container_name}/logs?tail=20" | \
+  jq -e '.logs | contains("cloud-core-smoke")' >/dev/null
+
+curl -fsS -X POST "${api_url}/api/apps/containers/containers/${container_name}/stop" >/dev/null
+curl -fsS "${api_url}/api/apps/containers/containers/${container_name}" | jq -e '.state == "exited"' >/dev/null
+
+curl -fsS -X POST "${api_url}/api/apps/containers/containers/${container_name}/start" >/dev/null
+curl -fsS "${api_url}/api/apps/containers/containers/${container_name}" | jq -e '.state == "running"' >/dev/null
+
+curl -fsS -X POST "${api_url}/api/apps/containers/containers/${container_name}/restart" >/dev/null
+curl -fsS "${api_url}/api/apps/containers/containers/${container_name}" | jq -e '.state == "running"' >/dev/null
+
+echo "Docker API smoke test passed; the test container will now be removed."

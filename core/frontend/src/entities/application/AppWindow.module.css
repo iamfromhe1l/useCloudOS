@@ -1,0 +1,68 @@
+.window {
+  display: flex;
+  width: min(100%, 104rem);
+  height: var(--workspace-height);
+  min-height: 0;
+  margin-inline: auto;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--uc-outline-variant);
+  border-radius: var(--shape-extra-large);
+  color: var(--uc-on-surface);
+  background: var(--uc-surface-container-low);
+  box-shadow: var(--elevation-window);
+}
+.titlebar {
+  display: flex;
+  min-height: 4.25rem;
+  flex: none;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--uc-outline-variant);
+  background: var(--uc-surface-container);
+}
+.identity {
+  min-width: 0;
+  flex: 1;
+}
+.identity h1 {
+  letter-spacing: var(--type-tracking-title);
+  font: var(--type-title-lg);
+}
+.identity p {
+  font: var(--type-body-sm);
+  color: var(--uc-on-surface-variant);
+}
+.identity h1,
+.identity p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.actions {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.content {
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+}
+@media (max-width: 599px) {
+  .window {
+    border-inline: 0;
+    border-radius: 0;
+  }
+  .titlebar {
+    padding: 0.6rem;
+    gap: 0.5rem;
+  }
+  .titlebar > span {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}

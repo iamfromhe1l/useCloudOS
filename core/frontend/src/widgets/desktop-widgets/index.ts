@@ -1,0 +1,6 @@
+export { ApplicationsWidget } from './ApplicationsWidget'
+export { DesktopWidget, WidgetContent, WidgetFooter, WidgetHeader } from './DesktopWidget'
+export { ResourceWidget } from './ResourceWidget'
+export { ServerWidget } from './ServerWidget'
+export { StorageWidget } from './StorageWidget'
+export { SystemWidget } from './SystemWidget'

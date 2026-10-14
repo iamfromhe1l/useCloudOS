@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/backend-common"
+require_backend_vm
+limactl shell --workdir "${GUEST_REPO_ROOT}" "${VM_NAME}" -- sudo bash -s <<'GUEST'
+set -Eeuo pipefail
+install -d -m 0750 /etc/usecloud
+install -d -m 0751 /data/platform/apps /data/platform/app-data
+install -d -m 0750 /data/platform/catalog
+install -d -m 0700 /data/platform/config
+# Preserve credentials across VM reset together with the database on /data.
+if [ -f /etc/usecloud/dev.env ] && [ ! -f /data/platform/config/dev.env ]; then
+  install -m 0600 /etc/usecloud/dev.env /data/platform/config/dev.env
+  install -m 0600 /etc/usecloud/postgres.env /data/platform/config/postgres.env
+fi
+if [ ! -f /data/platform/config/dev.env ]; then
+  umask 077
+  password="$(openssl rand -hex 24)"
+  printf 'CLOUD_CORE_DATABASE_URL=postgres://usecloud:%s@127.0.0.1:5432/usecloud?sslmode=disable\n' "$password" > /data/platform/config/dev.env
+  printf 'CLOUD_CORE_DEV_AUTH=1\nCLOUD_CORE_SECURE_COOKIE=0\nCLOUD_CORE_ALLOW_UNSIGNED_EMBEDDED=1\n' >> /data/platform/config/dev.env
+  printf 'POSTGRES_USER=usecloud\nPOSTGRES_PASSWORD=%s\nPOSTGRES_DB=usecloud\n' "$password" > /data/platform/config/postgres.env
+fi
+if ! grep -q '^CLOUD_CORE_APP_ROOT=' /data/platform/config/dev.env; then
+  printf 'CLOUD_CORE_APP_ROOT=/data/platform/apps\nCLOUD_CORE_DATA_ROOT=/data/platform/app-data\nCLOUD_CORE_CATALOG_ROOT=/data/platform/catalog\n' >> /data/platform/config/dev.env
+fi
+install -m 0600 /data/platform/config/dev.env /etc/usecloud/dev.env
+install -m 0600 /data/platform/config/postgres.env /etc/usecloud/postgres.env
+if ! docker container inspect usecloud-platform-db >/dev/null 2>&1; then
+  docker run -d --name usecloud-platform-db --restart unless-stopped \
+    --env-file /etc/usecloud/postgres.env -p 127.0.0.1:5432:5432 \
+    -v /data/platform/postgresql:/var/lib/postgresql postgres:18.6
+else
+  docker start usecloud-platform-db >/dev/null
+fi
+for attempt in $(seq 1 60); do
+  if docker exec usecloud-platform-db pg_isready -U usecloud -d usecloud >/dev/null 2>&1; then exit 0; fi
+  sleep 1
+done
+echo 'PostgreSQL did not become ready.' >&2
+exit 1
+GUEST

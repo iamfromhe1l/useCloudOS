@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=vm-common
+source "${SCRIPT_DIR}/vm-common"
+
+require_lima
+select_data_disk
+
+delete_data="${DELETE_DATA:-0}"
+force="${FORCE:-0}"
+
+cat <<EOF
+WARNING: this will permanently delete the Lima VM '${VM_NAME}' and everything
+on its 64 GiB primary disk.
+
+The persistent disk '${DATA_DISK_NAME}' is kept by default.
+Set DELETE_DATA=1 to delete it too (all files under /data will be lost).
+EOF
+
+if [ "${delete_data}" = "1" ]; then
+  printf "\nPersistent /data WILL ALSO BE DELETED.\n"
+fi
+
+if [ "${force}" != "1" ]; then
+  printf "\nType '%s' to continue: " "${VM_NAME}"
+  read -r confirmation
+  [ "${confirmation}" = "${VM_NAME}" ] || die "confirmation did not match; nothing was deleted"
+fi
+
+if vm_exists; then
+  if [ "$(vm_status)" = "Running" ]; then
+    limactl stop "${VM_NAME}"
+  fi
+  limactl delete --yes "${VM_NAME}"
+  printf "Deleted VM '%s'.\n" "${VM_NAME}"
+else
+  printf "VM '%s' does not exist; nothing to delete.\n" "${VM_NAME}"
+fi
+
+if [ "${delete_data}" = "1" ]; then
+  if disk_exists; then
+    limactl disk delete --yes "${DATA_DISK_NAME}"
+    printf "Deleted persistent disk '%s'; its data cannot be recovered by Lima.\n" "${DATA_DISK_NAME}"
+  else
+    printf "Persistent disk '%s' does not exist.\n" "${DATA_DISK_NAME}"
+  fi
+else
+  printf "Kept persistent disk '%s'.\n" "${DATA_DISK_NAME}"
+fi
+
+printf "Run 'make vm-start' to create a fresh VM.\n"

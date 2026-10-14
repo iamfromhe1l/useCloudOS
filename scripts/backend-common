@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=vm-common
+source "${SCRIPT_DIR}/vm-common"
+
+GUEST_REPO_ROOT="/workspace/usecloudos"
+GUEST_BACKEND_DIR="${GUEST_REPO_ROOT}/core/backend"
+
+require_backend_vm() {
+  require_lima
+  require_running_vm
+}
+
+build_version() {
+  git -C "${REPO_ROOT}" describe --tags --always --dirty 2>/dev/null || printf 'dev\n'
+}
+
+build_commit() {
+  git -C "${REPO_ROOT}" rev-parse --short=12 HEAD 2>/dev/null || printf 'unknown\n'
+}
+
+build_time() {
+  date -u '+%Y-%m-%dT%H:%M:%SZ'
+}
+
+build_ldflags() {
+  printf '%s' "-X usecloudos/backend/internal/buildinfo.Version=$(build_version)"
+  printf '%s' " -X usecloudos/backend/internal/buildinfo.Commit=$(build_commit)"
+  printf '%s' " -X usecloudos/backend/internal/buildinfo.BuildTime=$(build_time)"
+}

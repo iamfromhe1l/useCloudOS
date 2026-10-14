@@ -1,0 +1,1 @@
+export { InstalledApplications } from './InstalledApplications'

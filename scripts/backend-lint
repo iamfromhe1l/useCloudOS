@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=backend-common
+source "${SCRIPT_DIR}/backend-common"
+
+require_backend_vm
+printf "Formatting and vetting cloud-core in VM '%s'...\n" "${VM_NAME}"
+limactl shell --workdir "${GUEST_BACKEND_DIR}" "${VM_NAME}" -- bash -ceu '
+unformatted="$(/usr/local/go/bin/gofmt -l .)"
+if [ -n "${unformatted}" ]; then
+  echo "The following Go files need gofmt:" >&2
+  echo "${unformatted}" >&2
+  exit 1
+fi
+/usr/local/go/bin/go vet ./...
+'

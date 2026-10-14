@@ -1,0 +1,10 @@
+@import 'tailwindcss' source(none);
+@import '@usecloud/theme/tailwind';
+@source './';
+
+@layer base {
+  :where(button, a, input, [role='tab']):focus-visible {
+    outline: 2px solid var(--uc-primary);
+    outline-offset: 3px;
+  }
+}

@@ -1,0 +1,34 @@
+@import '@usecloud/theme/tailwind';
+:root {
+  --shape-small: 0.625rem;
+  --shape-medium: 1rem;
+  --shape-large: 1.5rem;
+  --shape-extra-large: 1.75rem;
+  --shape-pill: 999px;
+  --system-bar-height: 2.75rem;
+  --dock-height: 4.5rem;
+  --dock-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  --workspace-inline: 1.25rem;
+  --workspace-top-gap: 1rem;
+  --workspace-bottom-gap: 1rem;
+  --workspace-height: calc(
+    100dvh - var(--system-bar-height) - var(--workspace-top-gap) - var(--dock-height) -
+      var(--dock-bottom) - var(--workspace-bottom-gap)
+  );
+  --elevation-window: 0 12px 40px color-mix(in srgb, var(--uc-shadow) 22%, transparent);
+  --elevation-panel: 0 8px 32px color-mix(in srgb, var(--uc-shadow) 18%, transparent);
+}
+@media (min-width: 1440px) {
+  :root {
+    --workspace-inline: 2rem;
+  }
+}
+@media (max-width: 599px) {
+  :root {
+    --workspace-inline: 0rem;
+    --workspace-top-gap: 0.4rem;
+    --workspace-bottom-gap: 0.5rem;
+    --dock-bottom: max(0.4rem, env(safe-area-inset-bottom));
+    --dock-height: 4.5rem;
+  }
+}

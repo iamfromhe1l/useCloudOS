@@ -1,0 +1,25 @@
+# Native Debian 13 development VM for Intel Macs.
+base:
+  - ./dev-common.yaml
+
+arch: x86_64
+
+additionalDisks:
+  - name: usecloud-dev-data-amd64
+    format: true
+    fsType: ext4
+
+# The dated, checksummed Debian stable image is preferred for repeatability;
+# the official daily image is a fallback if Debian expires the dated build.
+images:
+  - location: https://cloud.debian.org/images/cloud/trixie/20261001-2618/debian-13-genericcloud-amd64-20261001-2618.qcow2
+    arch: x86_64
+    digest: sha512:f46f0671a6e5bdec5291ab8972bae2f10e5408c2f64a74078f11efc2f06a436a9d0313ed50e0472542eeabf780e9f7c792ac0a314c6c20507fcd9fd81b468c3d
+  - location: https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-genericcloud-amd64-daily.qcow2
+    arch: x86_64
+
+param:
+  dataDiskName: usecloud-dev-data-amd64
+  goArch: amd64
+  goSHA256: 63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445
+  expectedGuestArch: x86_64

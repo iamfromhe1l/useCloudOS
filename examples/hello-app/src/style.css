@@ -1,0 +1,9 @@
+@import '@usecloud/ui/css';
+@import 'tailwindcss' source(none);
+@import '@usecloud/theme/tailwind';
+@source './';
+:host {
+  display: block;
+  color: var(--uc-on-surface);
+  font-family: var(--font-sans);
+}

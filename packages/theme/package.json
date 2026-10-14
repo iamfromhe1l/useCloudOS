@@ -1,0 +1,31 @@
+{
+  "name": "@usecloud/theme",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "UNLICENSED",
+  "files": [
+    "dist",
+    "styles",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./css": "./styles/theme.css",
+    "./tailwind": "./styles/tokens.css",
+    "./typography": "./styles/typography.css"
+  },
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "usecloud-build-package",
+    "test": "vitest run --environment jsdom"
+  },
+  "dependencies": {
+    "@material/material-color-utilities": "^0.4.0"
+  },
+  "devDependencies": {
+    "@usecloud/tooling": "0.1.0"
+  }
+}

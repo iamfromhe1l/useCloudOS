@@ -1,0 +1,17 @@
+apiVersion: usecloud.io/v1
+kind: App
+metadata:
+  id: hello
+  name: Hello
+  version: 0.1.0
+  description: Minimal independent application using the public SDK and UI kit
+  author: Example developer
+platform: { minVersion: 0.1.0, hostVersion: 1 }
+runtime: { type: native }
+frontend:
+  type: web-component
+  entry: frontend/index.js
+  element: usecloud-hello-v0-1-0
+  styles: [frontend/style.css]
+navigation: { desktop: true, dock: false, icon: apps, colorRole: tertiary }
+permissions: []

@@ -1,0 +1,235 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://usecloud.io/schema/app-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "const": "usecloud.io/v1"
+    },
+    "kind": {
+      "const": "App"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 63,
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+        },
+        "description": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["id", "name", "version", "description", "author"]
+    },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "minVersion": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+        },
+        "maxVersion": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+        },
+        "hostVersion": {
+          "const": 1
+        }
+      },
+      "required": ["minVersion", "hostVersion"]
+    },
+    "runtime": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "native"
+            }
+          },
+          "required": ["type"]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "container"
+            },
+            "image": {
+              "type": "string",
+              "minLength": 1
+            },
+            "internalPort": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535
+            }
+          },
+          "required": ["type", "image", "internalPort"]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "external"
+            }
+          },
+          "required": ["type"]
+        }
+      ]
+    },
+    "frontend": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "web-component"
+            },
+            "entry": {
+              "type": "string",
+              "pattern": "^frontend/[a-zA-Z0-9_./-]+\\.js$"
+            },
+            "element": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*-[a-z0-9-]+$"
+            },
+            "styles": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^frontend/[a-zA-Z0-9_./-]+\\.css$"
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": ["type", "entry", "element"]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "external"
+            },
+            "url": {
+              "type": "string",
+              "pattern": "^https?://"
+            }
+          },
+          "required": ["type", "url"]
+        }
+      ]
+    },
+    "backend": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "native"
+        },
+        "executable": {
+          "type": "string",
+          "pattern": "^backend/[a-zA-Z0-9_./-]+$"
+        },
+        "socket": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*\\.sock$"
+        },
+        "routes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "method": {
+                "enum": ["GET", "POST", "PUT", "DELETE"]
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^/(?!.*\\.\\.).*"
+              },
+              "permission": {
+                "enum": [
+                  "system.read",
+                  "storage.app-data",
+                  "storage.media.read",
+                  "storage.media.write",
+                  "network.lan",
+                  "network.internet",
+                  "docker.read",
+                  "docker.manage",
+                  "notifications.send",
+                  "background.run"
+                ]
+              }
+            },
+            "required": ["method", "path", "permission"]
+          }
+        }
+      },
+      "required": ["type", "executable", "socket", "routes"]
+    },
+    "navigation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "desktop": {
+          "type": "boolean"
+        },
+        "dock": {
+          "type": "boolean"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "colorRole": {
+          "enum": ["primary", "secondary", "tertiary"]
+        }
+      },
+      "required": ["desktop", "dock", "icon", "colorRole"]
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "system.read",
+          "storage.app-data",
+          "storage.media.read",
+          "storage.media.write",
+          "network.lan",
+          "network.internet",
+          "docker.read",
+          "docker.manage",
+          "notifications.send",
+          "background.run"
+        ]
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": ["apiVersion", "kind", "metadata", "platform", "runtime", "navigation", "permissions"]
+}

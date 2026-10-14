@@ -1,0 +1,22 @@
+{
+  "name": "@usecloud/containers",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@usecloud/ui": "0.1.0",
+    "@usecloud/theme": "0.1.0",
+    "@usecloud/app-sdk": "0.1.0",
+    "@usecloud/manifest": "0.1.0",
+    "@radix-ui/react-tabs": "^1.2.1",
+    "@tanstack/react-query": "^5.104.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router-dom": "^7.18.4"
+  }
+}

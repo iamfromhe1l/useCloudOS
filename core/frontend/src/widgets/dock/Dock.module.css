@@ -1,0 +1,114 @@
+.shell {
+  position: fixed;
+  z-index: 45;
+  right: 0;
+  bottom: var(--dock-bottom);
+  left: 0;
+  display: flex;
+  height: var(--dock-height);
+  justify-content: center;
+  padding-inline: 0.5rem;
+  pointer-events: none;
+}
+.surface {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--uc-outline-variant);
+  border-radius: var(--shape-extra-large);
+  background: color-mix(in srgb, var(--uc-surface-container) 94%, transparent);
+  box-shadow: var(--elevation-panel);
+  backdrop-filter: blur(12px);
+  pointer-events: auto;
+}
+.item {
+  position: relative;
+  display: flex;
+  min-width: 3.4rem;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid transparent;
+  border-radius: var(--shape-medium);
+  color: var(--uc-on-surface);
+  background: transparent;
+  text-decoration: none;
+}
+.item > span:first-child {
+  width: 2.6rem;
+  height: 2.6rem;
+}
+.item:hover {
+  background: var(--uc-surface-container-highest);
+}
+.active {
+  border-color: var(--uc-primary);
+  background: var(--uc-primary-container);
+}
+.indicator {
+  position: absolute;
+  bottom: 0.15rem;
+  width: 0.3rem;
+  height: 0.3rem;
+  border-radius: 50%;
+  background: transparent;
+}
+.active .indicator {
+  background: var(--uc-on-primary-container);
+}
+.label {
+  display: none;
+  font: var(--type-caption);
+}
+.unavailable {
+  border-style: dashed;
+  border-color: var(--uc-outline-variant);
+}
+.unavailable > span:first-child {
+  background: var(--uc-surface-container-highest);
+  color: var(--uc-on-surface-variant);
+}
+@media (max-width: 599px) {
+  .surface {
+    width: 100%;
+    justify-content: space-around;
+    gap: 0;
+    padding: 0.3rem;
+  }
+  .item {
+    flex: 1;
+    min-width: 0;
+    padding: 0.2rem;
+  }
+  .item > span:first-child {
+    width: 2.3rem;
+    height: 2.3rem;
+  }
+  .label {
+    display: block;
+    font-size: 0.6875rem;
+  }
+  .indicator {
+    bottom: 0;
+  }
+}
+:global([data-reduce-transparency='true']) .surface {
+  backdrop-filter: none;
+  background: var(--uc-surface-container);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .surface {
+    backdrop-filter: none;
+    background: var(--uc-surface-container);
+  }
+}
+@media (forced-colors: active) {
+  .active {
+    border: 2px solid Highlight;
+  }
+}

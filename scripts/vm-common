@@ -1,0 +1,150 @@
+#!/usr/bin/env bash
+
+VM_NAME="usecloud-dev"
+DATA_DISK_SIZE="32GiB"
+LEGACY_ARM64_DATA_DISK_NAME="usecloud-dev-data"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+die() {
+  printf 'Error: %s\n' "$*" >&2
+  exit 1
+}
+
+normalize_arch() {
+  case "$1" in
+    x86_64 | amd64) printf 'amd64\n' ;;
+    arm64 | aarch64) printf 'arm64\n' ;;
+    *) return 1 ;;
+  esac
+}
+
+lima_arch_name() {
+  case "$1" in
+    amd64) printf 'x86_64\n' ;;
+    arm64) printf 'aarch64\n' ;;
+    *) return 1 ;;
+  esac
+}
+
+detected_arch_raw="$(uname -m)"
+HOST_ARCH="$(normalize_arch "${detected_arch_raw}")" || \
+  die "unsupported macOS host architecture '${detected_arch_raw}'; expected x86_64 or arm64"
+
+requested_arch_raw="${LIMA_ARCH:-${detected_arch_raw}}"
+TARGET_ARCH="$(normalize_arch "${requested_arch_raw}")" || \
+  die "unsupported LIMA_ARCH '${requested_arch_raw}'; expected amd64 or arm64"
+EXPECTED_GUEST_MACHINE="$(lima_arch_name "${TARGET_ARCH}")"
+
+LIMA_CONFIG="${REPO_ROOT}/infra/lima/dev-${TARGET_ARCH}.yaml"
+PREFERRED_DATA_DISK_NAME="usecloud-dev-data-${TARGET_ARCH}"
+DATA_DISK_NAME="${PREFERRED_DATA_DISK_NAME}"
+
+require_lima() {
+  if ! command -v limactl >/dev/null 2>&1; then
+    cat >&2 <<'EOF'
+Error: limactl was not found.
+
+Install Lima with Homebrew, then retry:
+  brew install lima
+EOF
+    exit 1
+  fi
+}
+
+vm_exists() {
+  limactl list --quiet 2>/dev/null | grep -Fxq "${VM_NAME}"
+}
+
+vm_status() {
+  limactl list "${VM_NAME}" --format '{{.Status}}' 2>/dev/null
+}
+
+vm_arch() {
+  local raw_arch
+  raw_arch="$(limactl list "${VM_NAME}" --format '{{.Arch}}' 2>/dev/null)" || return 1
+  normalize_arch "${raw_arch}"
+}
+
+lima_host_arch() {
+  local raw_arch
+  raw_arch="$(limactl info 2>/dev/null | sed -n 's/.*"hostArch": "\([^"]*\)".*/\1/p' | head -n 1)"
+  [ -n "${raw_arch}" ] || return 1
+  normalize_arch "${raw_arch}"
+}
+
+disk_exists_named() {
+  local disk_name="$1"
+  limactl disk list 2>/dev/null | awk 'NR > 1 { print $1 }' | grep -Fxq "${disk_name}"
+}
+
+disk_exists() {
+  disk_exists_named "${DATA_DISK_NAME}"
+}
+
+vm_data_disk() {
+  local instance_dir instance_config
+  instance_dir="$(limactl list "${VM_NAME}" --format '{{.Dir}}' 2>/dev/null)" || return 1
+  instance_config="${instance_dir}/lima.yaml"
+  [ -r "${instance_config}" ] || return 1
+
+  awk '
+    /^additionalDisks:/ { in_disks = 1; next }
+    in_disks && /^[[:space:]]*-[[:space:]]*name:[[:space:]]*/ {
+      sub(/^[[:space:]]*-[[:space:]]*name:[[:space:]]*/, "")
+      gsub(/^['\''"]|['\''"]$/, "")
+      print
+      exit
+    }
+    in_disks && /^[^[:space:]-]/ { exit }
+  ' "${instance_config}"
+}
+
+select_data_disk() {
+  local attached_disk=""
+  DATA_DISK_NAME="${PREFERRED_DATA_DISK_NAME}"
+
+  if vm_exists; then
+    attached_disk="$(vm_data_disk || true)"
+    if [ -n "${attached_disk}" ]; then
+      DATA_DISK_NAME="${attached_disk}"
+      return
+    fi
+  fi
+
+  # Reuse the disk name created by the original ARM-only setup, if present.
+  if [ "${TARGET_ARCH}" = "arm64" ] && \
+    ! disk_exists_named "${PREFERRED_DATA_DISK_NAME}" && \
+    disk_exists_named "${LEGACY_ARM64_DATA_DISK_NAME}"; then
+    DATA_DISK_NAME="${LEGACY_ARM64_DATA_DISK_NAME}"
+  fi
+}
+
+assert_native_target() {
+  local lima_arch
+  [ "${HOST_ARCH}" = "${TARGET_ARCH}" ] || \
+    die "LIMA_ARCH=${TARGET_ARCH} does not match this ${HOST_ARCH} host. The VZ configurations only support native guests."
+
+  lima_arch="$(lima_host_arch)" || die "could not determine Lima host architecture"
+  [ "${lima_arch}" = "${HOST_ARCH}" ] || \
+    die "Lima reports host architecture '${lima_arch}', but uname reports '${HOST_ARCH}'. Install and run a native Homebrew/Lima build."
+}
+
+assert_existing_vm_arch() {
+  local existing_arch
+  vm_exists || return 0
+  existing_arch="$(vm_arch)" || die "could not determine architecture of existing VM '${VM_NAME}'"
+  [ "${existing_arch}" = "${TARGET_ARCH}" ] || die \
+    "existing VM '${VM_NAME}' is ${existing_arch}, but this host requires ${TARGET_ARCH}. Run 'make vm-reset' to remove the VM; persistent /data is kept by default."
+}
+
+require_vm() {
+  vm_exists || die "VM '${VM_NAME}' does not exist. Run 'make vm-start' first."
+  assert_existing_vm_arch
+}
+
+require_running_vm() {
+  require_vm
+  [ "$(vm_status)" = "Running" ] || die "VM '${VM_NAME}' is not running. Run 'make vm-start' first."
+}

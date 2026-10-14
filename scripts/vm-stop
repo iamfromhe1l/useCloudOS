@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=vm-common
+source "${SCRIPT_DIR}/vm-common"
+
+require_lima
+require_vm
+
+if [ "$(vm_status)" = "Stopped" ]; then
+  printf "VM '%s' is already stopped.\n" "${VM_NAME}"
+else
+  printf "Stopping VM '%s'...\n" "${VM_NAME}"
+  limactl stop "${VM_NAME}"
+fi
+

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=vm-common
+source "${SCRIPT_DIR}/vm-common"
+
+require_lima
+select_data_disk
+
+printf 'Host architecture: %s\n' "${HOST_ARCH}"
+printf 'Selected config:   %s\n' "${LIMA_CONFIG}"
+
+if vm_exists; then
+  printf 'Guest architecture: %s\n\n' "$(vm_arch)"
+  limactl list "${VM_NAME}"
+else
+  printf "VM '%s' has not been created. Run 'make vm-start'.\n" "${VM_NAME}"
+fi
+
+printf '\nPersistent data disk:\n'
+if disk_exists; then
+  limactl disk list | awk -v name="${DATA_DISK_NAME}" 'NR == 1 || $1 == name'
+else
+  printf "Disk '%s' has not been created.\n" "${DATA_DISK_NAME}"
+fi

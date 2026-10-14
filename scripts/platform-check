@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/backend-common"
+require_backend_vm
+limactl shell --workdir "${GUEST_REPO_ROOT}" "${VM_NAME}" -- bash -s <<'GUEST'
+set -Eeuo pipefail
+api=http://127.0.0.1:8080
+package=/workspace/usecloudos/artifacts/containers-0.1.0.usecloud
+curl -fsS "$api/api/v1/health" | jq -e '.status == "ok"' >/dev/null
+if curl -fsS "$api/api/v1/apps" | jq -e '.applications | any(.manifest.metadata.id == "containers")' >/dev/null; then
+  echo 'Containers is already installed. Refusing to uninstall an existing app. Remove it explicitly before this fresh-install check.' >&2
+  exit 1
+fi
+installed=0
+cleanup() {
+  if [ "$installed" = 1 ]; then
+    curl -fsS -X DELETE "$api/api/v1/apps/containers?confirm=1" >/dev/null || true
+  fi
+}
+trap cleanup EXIT
+curl -fsS -X POST "$api/api/v1/apps/inspect" --data-binary "@$package" | jq -e '.trust == "unsigned"' >/dev/null
+response="$(curl -fsS -X POST "$api/api/v1/apps/install?confirm=1" --data-binary "@$package")"
+installed=1
+printf '%s' "$response" | jq -e '.status == "running"' >/dev/null
+curl -fsS "$api/api/v1/apps" | jq -e '.applications | any(.manifest.metadata.id == "containers")' >/dev/null
+curl -fsS "$api/app-assets/containers/0.1.0/frontend/index.js" >/dev/null
+curl -fsS "$api/api/apps/containers/docker/info" | jq -e '.available' >/dev/null
+CLOUD_CORE_URL="$api" bash /workspace/usecloudos/scripts/docker-smoke-guest
+curl -fsS -X POST "$api/api/v1/apps/containers/stop" >/dev/null
+status="$(curl -s -o /dev/null -w '%{http_code}' "$api/api/apps/containers/containers")"
+[ "$status" = 503 ]
+curl -fsS "$api/api/v1/health" >/dev/null
+curl -fsS -X POST "$api/api/v1/apps/containers/start" >/dev/null
+curl -fsS "$api/api/apps/containers/containers" | jq -e '.containers | type == "array"' >/dev/null
+curl -fsS -X DELETE "$api/api/v1/apps/containers?confirm=1" >/dev/null
+installed=0
+curl -fsS "$api/api/v1/apps" | jq -e '.applications | all(.manifest.metadata.id != "containers")' >/dev/null
+curl -fsS "$api/api/v1/health" | jq -e '.status == "ok"' >/dev/null
+echo 'Platform install/socket gateway/service failure/uninstall smoke passed.'
+GUEST

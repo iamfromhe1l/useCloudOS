@@ -1,0 +1,25 @@
+[Unit]
+Description=useCloudOS core system service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/cloud-core
+Environment=CLOUD_CORE_ADDR=0.0.0.0:8080
+EnvironmentFile=-/etc/cloud-core/cloud-core.env
+EnvironmentFile=-/etc/usecloud/dev.env
+Restart=on-failure
+RestartSec=3s
+TimeoutStopSec=15s
+KillSignal=SIGTERM
+UMask=0027
+
+# cloud-core currently runs as root because it is a system-management daemon;
+# Core needs systemd/install orchestration privileges, not a Docker feature.
+# Docker business logic lives in the dedicated Containers app account/service.
+# TODO: broker lifecycle operations through a narrowly privileged helper and
+# move Core to a dedicated platform identity; never add it to Docker for UI logic.
+
+[Install]
+WantedBy=multi-user.target

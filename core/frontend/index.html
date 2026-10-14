@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="useCloudOS personal cloud operating environment" />
+    <meta name="theme-color" content="#11140d" />
+    <script>
+      ;(() => {
+        const stored = localStorage.getItem('usecloudos-theme-mode') || 'dark'
+        const mode =
+          stored === 'system'
+            ? matchMedia('(prefers-color-scheme: light)').matches
+              ? 'light'
+              : 'dark'
+            : stored
+        document.documentElement.dataset.theme = mode
+        document.documentElement.dataset.reduceTransparency =
+          localStorage.getItem('usecloudos-reduce-transparency') === 'true' ? 'true' : 'false'
+        document.documentElement.style.colorScheme = mode
+      })()
+    </script>
+    <title>useCloudOS</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

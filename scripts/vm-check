@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=vm-common
+source "${SCRIPT_DIR}/vm-common"
+
+require_lima
+require_running_vm
+
+printf 'Host architecture: %s\n' "${HOST_ARCH}"
+printf "Running smoke checks in VM '%s'...\n" "${VM_NAME}"
+limactl shell --workdir /workspace/usecloudos "${VM_NAME}" -- env \
+  "EXPECTED_GUEST_ARCH=${TARGET_ARCH}" \
+  "EXPECTED_GUEST_MACHINE=${EXPECTED_GUEST_MACHINE}" \
+  bash -s <<'GUEST_CHECKS'
+set -Eeuo pipefail
+
+check() {
+  local description="$1"
+  shift
+  printf '  %-32s' "${description}"
+  if "$@" >/dev/null 2>&1; then
+    printf 'OK\n'
+  else
+    printf 'FAILED\n' >&2
+    return 1
+  fi
+}
+
+printf 'Guest architecture: %s\n' "${EXPECTED_GUEST_ARCH}"
+
+check "Linux kernel" test "$(uname -s)" = Linux
+check "native architecture" test "$(uname -m)" = "${EXPECTED_GUEST_MACHINE}"
+check "systemd is PID 1" test "$(ps -p 1 -o comm=)" = systemd
+check "Docker service" systemctl is-active --quiet docker.service
+check "Docker socket" test -S /var/run/docker.sock
+check "Docker as current user" docker ps
+check "/proc" test -r /proc/meminfo
+check "/sys" test -d /sys/class
+check "block devices" lsblk
+check "mounted filesystems" df -h
+check "persistent /data" test -w /data
+check "repository mount" test -d /workspace/usecloudos/.git
+check "Go toolchain" /usr/local/go/bin/go version
+check "DNS and outbound network" getent hosts deb.debian.org
+
+printf '\nVersions and resources:\n'
+printf '  kernel:  %s\n' "$(uname -r)"
+printf '  arch:    %s\n' "$(uname -m)"
+printf '  Go:      %s\n' "$(/usr/local/go/bin/go version)"
+printf '  Docker:  %s\n' "$(docker version --format '{{.Server.Version}}')"
+printf '  data:    %s\n' "$(df -h /data | awk 'NR == 2 { print $2 " total, " $4 " free" }')"
+printf '  vzNAT:   %s\n' "$(ip -4 -o addr show lima0 | awk '{ sub(/\/.*/, "", $4); print $4; exit }')"
+GUEST_CHECKS
+
+printf '\nHTTP forwarding target: http://127.0.0.1:8080\n'
+printf 'The forward is configured; start a service on 0.0.0.0:8080 to test HTTP end-to-end.\n'

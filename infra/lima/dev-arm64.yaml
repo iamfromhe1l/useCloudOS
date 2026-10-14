@@ -1,0 +1,25 @@
+# Native Debian 13 development VM for Apple Silicon Macs.
+base:
+  - ./dev-common.yaml
+
+arch: aarch64
+
+additionalDisks:
+  - name: usecloud-dev-data-arm64
+    format: true
+    fsType: ext4
+
+# The dated, checksummed Debian stable image is preferred for repeatability;
+# the official daily image is a fallback if Debian expires the dated build.
+images:
+  - location: https://cloud.debian.org/images/cloud/trixie/20261001-2618/debian-13-genericcloud-arm64-20261001-2618.qcow2
+    arch: aarch64
+    digest: sha512:d8470b8c6c38fead046c794b5800a5a7b96672d5bcf543cc230ceb0c4b8ace05ed341a0c8928045422243fde26b2f1f2f58e99244c65709ffda2e3d4b674dd5a
+  - location: https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-genericcloud-arm64-daily.qcow2
+    arch: aarch64
+
+param:
+  dataDiskName: usecloud-dev-data-arm64
+  goArch: arm64
+  goSHA256: 3450b45a3f9ee8568792736a5c5e70a1f2e9b36c35a8f74958c03e51d7d92bec
+  expectedGuestArch: aarch64

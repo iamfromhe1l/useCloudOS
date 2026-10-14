@@ -1,0 +1,70 @@
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  html,
+  body {
+    letter-spacing: var(--type-tracking-body);
+    min-width: 320px;
+    min-height: 100%;
+    margin: 0;
+  }
+  body {
+    font: var(--type-body-md);
+    color: var(--uc-on-surface);
+    background: var(--uc-surface);
+    font-synthesis: none;
+  }
+  h1,
+  h2,
+  h3,
+  p,
+  dl,
+  dd {
+    margin: 0;
+  }
+  button,
+  input {
+    font: inherit;
+  }
+  button,
+  a,
+  input {
+    -webkit-tap-highlight-color: transparent;
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: default;
+  }
+  :where(button, a, input, [tabindex]):focus-visible {
+    outline: 2px solid var(--uc-primary);
+    outline-offset: 3px;
+  }
+  ::selection {
+    color: var(--uc-on-primary-container);
+    background: var(--uc-primary-container);
+  }
+}
+@utility overflow-wrap-anywhere {
+  overflow-wrap: anywhere;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (forced-colors: active) {
+  :where(button, a, input, [tabindex]):focus-visible {
+    outline: 2px solid CanvasText;
+  }
+  button,
+  a {
+    border-color: ButtonText;
+  }
+}

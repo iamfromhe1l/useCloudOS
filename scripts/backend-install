@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=backend-common
+source "${SCRIPT_DIR}/backend-common"
+
+require_backend_vm
+"${SCRIPT_DIR}/platform-bootstrap"
+"${SCRIPT_DIR}/backend-build"
+
+printf "Installing cloud-core as a systemd service in VM '%s'...\n" "${VM_NAME}"
+limactl shell --workdir "${GUEST_REPO_ROOT}" "${VM_NAME}" -- bash -ceu '
+sudo install -m 0755 core/backend/bin/cloud-core /usr/local/bin/cloud-core
+sudo install -d -m 0755 /etc/cloud-core
+sudo install -m 0644 infra/systemd/cloud-core.service /etc/systemd/system/cloud-core.service
+sudo systemctl daemon-reload
+sudo systemctl enable cloud-core.service
+sudo systemctl restart cloud-core.service
+sudo systemctl --no-pager --full status cloud-core.service
+'

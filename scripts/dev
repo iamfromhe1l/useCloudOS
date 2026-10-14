@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/backend-common"
+"${SCRIPT_DIR}/vm-start"
+"${SCRIPT_DIR}/backend-install"
+"${SCRIPT_DIR}/app-containers-pack"
+# Development preinstall uses exactly the public installer/registry contract.
+if ! curl -fsS http://127.0.0.1:8080/api/v1/apps | grep -q '"id":"containers"'; then
+  curl -fsS -X POST 'http://127.0.0.1:8080/api/v1/apps/install?confirm=1' \
+    --data-binary "@${REPO_ROOT}/artifacts/containers-0.1.0.usecloud"
+fi
+cd "${REPO_ROOT}"
+exec npm run dev -w @usecloud/core-frontend

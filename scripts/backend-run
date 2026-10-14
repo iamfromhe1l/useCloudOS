@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=backend-common
+source "${SCRIPT_DIR}/backend-common"
+
+require_backend_vm
+"${SCRIPT_DIR}/platform-bootstrap"
+ldflags="$(build_ldflags)"
+address="${CLOUD_CORE_ADDR:-0.0.0.0:8080}"
+
+printf "Running cloud-core in VM '%s' on %s...\n" "${VM_NAME}" "${address}"
+printf 'Press Ctrl-C to stop it gracefully.\n'
+exec limactl shell --workdir "${GUEST_BACKEND_DIR}" "${VM_NAME}" -- sudo bash -ceu '
+set -a
+source /etc/usecloud/dev.env
+set +a
+export CLOUD_CORE_ADDR="$1"
+exec /usr/local/go/bin/go run -trimpath -ldflags "$2" ./cmd/cloud-core
+' -- "${address}" "${ldflags}"

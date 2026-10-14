@@ -1,0 +1,13 @@
+.icon-mask {
+  display: inline-block;
+  flex: none;
+  background: currentColor;
+  mask: var(--icon-url) center / contain no-repeat;
+  -webkit-mask: var(--icon-url) center / contain no-repeat;
+}
+@media (forced-colors: active) {
+  .icon-mask {
+    forced-color-adjust: none;
+    color: ButtonText;
+  }
+}

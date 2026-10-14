@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=vm-common
+source "${SCRIPT_DIR}/vm-common"
+
+require_lima
+require_running_vm
+
+ip_address="$(limactl shell --workdir / "${VM_NAME}" -- bash -lc "ip -4 -o addr show lima0 | awk '{ sub(/\\/.*/, \"\", \$4); print \$4; exit }'")"
+[ -n "${ip_address}" ] || die "no vzNAT IPv4 address was found on interface lima0"
+printf '%s\n' "${ip_address}"

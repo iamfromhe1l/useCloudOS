@@ -1,0 +1,27 @@
+@import '@usecloud/ui/css';
+@import 'tailwindcss' source(none);
+@import '@usecloud/theme/tailwind';
+@source './';
+:host {
+  display: block;
+  min-width: 0;
+  color: var(--uc-on-surface);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.usecloud-app-root {
+  min-width: 0;
+}
+button,
+a {
+  touch-action: manipulation;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation: none !important;
+  }
+}

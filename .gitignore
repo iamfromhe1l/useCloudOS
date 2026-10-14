@@ -1,0 +1,36 @@
+# macOS metadata
+.DS_Store
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Lima runtime state is stored outside the repository in ~/.lima. These entries
+# protect against accidental local overrides or exported disk images.
+.lima/
+*.qcow2
+*.raw
+*.pid
+*.sock
+
+# Build and test output
+bin/
+backend/bin/
+dist/
+node_modules/
+frontend/dist/
+frontend/storybook-static/
+frontend/playwright-report/
+frontend/test-results/
+frontend/dist/stats.html
+.vite/
+coverage.out
+*.test
+artifacts/
+*.usecloud
+*.tgz
+**/storybook-static/
+**/playwright-report/
+**/test-results/
+*.tsbuildinfo

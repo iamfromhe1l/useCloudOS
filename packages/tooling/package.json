@@ -1,0 +1,1 @@
+{"name":"@usecloud/tooling","version":"0.1.0","type":"module","license":"UNLICENSED","files":["index.js","index.d.ts","bin","README.md"],"exports":{".":{"types":"./index.d.ts","import":"./index.js"}},"types":"./index.d.ts","bin":{"usecloud-build-package":"./bin/build.mjs"},"scripts":{"build":"node --check index.js && node --check bin/build.mjs"}}

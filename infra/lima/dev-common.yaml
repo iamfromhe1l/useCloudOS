@@ -1,0 +1,155 @@
+# Shared configuration for the native amd64 and arm64 development VMs.
+# Select an architecture-specific entry point through scripts/vm-start.
+minimumLimaVersion: 2.0.0
+
+vmType: vz
+os: Linux
+
+cpus: 4
+memory: 8GiB
+disk: 64GiB
+
+# VZ uses Apple's native Virtualization.framework. No display is created.
+video:
+  display: none
+
+# This VM runs rootful Docker Engine instead of Lima-managed containerd.
+containerd:
+  system: false
+  user: false
+
+# scripts/vm-start supplies the absolute clone path as a template parameter.
+mountType: virtiofs
+mounts:
+  - location: '{{.Param.repoDir}}'
+    mountPoint: /workspace/usecloudos
+    writable: true
+
+networks:
+  - vzNAT: true
+
+portForwards:
+  - guestPort: 8080
+    hostPort: 8080
+    hostIP: 127.0.0.1
+    proto: tcp
+    static: true
+
+ssh:
+  loadDotSSHPubKeys: false
+  forwardAgent: false
+
+provision:
+  - mode: system
+    script: |
+      #!/usr/bin/env bash
+      set -eux -o pipefail
+      export DEBIAN_FRONTEND=noninteractive
+
+      apt-get update
+      apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        curl \
+        file \
+        git \
+        iproute2 \
+        jq \
+        less \
+        lsof \
+        make \
+        pkg-config \
+        procps \
+        rsync \
+        unzip
+
+      install -m 0755 -d /etc/apt/keyrings
+      if [ ! -s /etc/apt/keyrings/docker.asc ]; then
+        curl -fsSL https://download.docker.com/linux/debian/gpg \
+          -o /etc/apt/keyrings/docker.asc
+      fi
+      chmod a+r /etc/apt/keyrings/docker.asc
+
+      . /etc/os-release
+      dpkg_arch="$(dpkg --print-architecture)"
+      cat > /etc/apt/sources.list.d/docker.sources <<EOF
+      Types: deb
+      URIs: https://download.docker.com/linux/debian
+      Suites: ${VERSION_CODENAME}
+      Components: stable
+      Architectures: ${dpkg_arch}
+      Signed-By: /etc/apt/keyrings/docker.asc
+      EOF
+
+      apt-get update
+      apt-get install -y \
+        containerd.io \
+        docker-buildx-plugin \
+        docker-ce \
+        docker-ce-cli \
+        docker-compose-plugin
+
+      usermod -aG docker "{{.User}}"
+      systemctl enable --now docker.service
+
+      go_version=1.27.1
+      go_archive="go${go_version}.linux-{{.Param.goArch}}.tar.gz"
+      go_sha256="{{.Param.goSHA256}}"
+      if ! /usr/local/go/bin/go version 2>/dev/null | grep -q "go${go_version}"; then
+        curl -fsSL "https://go.dev/dl/${go_archive}" -o "/tmp/${go_archive}"
+        echo "${go_sha256}  /tmp/${go_archive}" | sha256sum --check --strict
+        rm -rf /usr/local/go
+        tar -C /usr/local -xzf "/tmp/${go_archive}"
+        rm -f "/tmp/${go_archive}"
+      fi
+      cat > /etc/profile.d/go.sh <<'EOF'
+      export PATH="/usr/local/go/bin:$PATH"
+      EOF
+
+      data_mount="/mnt/lima-{{.Param.dataDiskName}}"
+      if [ ! -d "${data_mount}" ]; then
+        echo "Persistent Lima disk is not mounted at ${data_mount}" >&2
+        exit 1
+      fi
+      chown "{{.UID}}" "${data_mount}"
+      if [ -e /data ] && [ ! -L /data ]; then
+        echo "/data exists and is not a symlink; refusing to replace it" >&2
+        exit 1
+      fi
+      ln -sfn "${data_mount}" /data
+
+  - mode: user
+    script: |
+      #!/usr/bin/env bash
+      set -eux -o pipefail
+      mkdir -p "{{.Home}}/go/bin"
+
+probes:
+  - script: |
+      #!/usr/bin/env bash
+      set -eux -o pipefail
+      test "$(uname -m)" = "{{.Param.expectedGuestArch}}"
+      test "$(ps -p 1 -o comm=)" = systemd
+      systemctl is-active --quiet docker.service
+      test -S /var/run/docker.sock
+      test -d /proc/1
+      test -d /sys/class
+      test -w /data
+      command -v git >/dev/null
+      command -v /usr/local/go/bin/go >/dev/null
+      id -nG "{{.User}}" | grep -qw docker
+    hint: 'Provisioning failed. Inspect it with: limactl shell usecloud-dev sudo journalctl -u cloud-final'
+
+param:
+  # Architecture entry points override these validation-safe placeholders.
+  repoDir: /tmp/usecloudos-repository-not-set
+  dataDiskName: usecloud-dev-data-not-selected
+  goArch: amd64
+  goSHA256: 63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445
+  expectedGuestArch: x86_64
+
+message: |
+  useCloudOS development VM is ready.
+  Repository: /workspace/usecloudos
+  Persistent data: /data
+  Browser endpoint: http://127.0.0.1:8080

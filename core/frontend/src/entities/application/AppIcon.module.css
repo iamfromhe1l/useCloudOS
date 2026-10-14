@@ -1,0 +1,20 @@
+.icon {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  place-items: center;
+  border-radius: var(--shape-medium);
+}
+.primary {
+  color: var(--uc-on-primary-container);
+  background: var(--uc-primary-container);
+}
+.secondary {
+  color: var(--uc-on-secondary-container);
+  background: var(--uc-secondary-container);
+}
+.tertiary {
+  color: var(--uc-on-tertiary-container);
+  background: var(--uc-tertiary-container);
+}

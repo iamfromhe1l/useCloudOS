@@ -1,0 +1,7 @@
+@import './fonts.css';
+@import '@usecloud/ui/css';
+@import 'tailwindcss';
+@import './tokens.css';
+@import './theme.css';
+@import './typography.css';
+@import './globals.css';

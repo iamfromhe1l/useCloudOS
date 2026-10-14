@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=vm-common
+source "${SCRIPT_DIR}/vm-common"
+
+require_lima
+assert_native_target
+assert_existing_vm_arch
+select_data_disk
+
+if vm_exists; then
+  if [ "$(vm_status)" = "Running" ]; then
+    printf "VM '%s' is already running.\n" "${VM_NAME}"
+  else
+    printf "Starting existing VM '%s'...\n" "${VM_NAME}"
+    limactl start --progress "${VM_NAME}"
+  fi
+else
+  limactl validate "${LIMA_CONFIG}" >/dev/null
+
+  if ! disk_exists; then
+    printf "Creating persistent Lima disk '%s' (%s)...\n" "${DATA_DISK_NAME}" "${DATA_DISK_SIZE}"
+    # Virtualization.framework attaches raw disks natively. Explicitly selecting
+    # raw also avoids requiring qemu-img just to create a VZ data disk.
+    limactl disk create --yes --format raw --size "${DATA_DISK_SIZE}" "${DATA_DISK_NAME}"
+  fi
+
+  printf "Creating VM '%s' from %s...\n" "${VM_NAME}" "${LIMA_CONFIG}"
+  limactl create --yes \
+    --name "${VM_NAME}" \
+    --param "repoDir=${REPO_ROOT}" \
+    --param "dataDiskName=${DATA_DISK_NAME}" \
+    --set ".additionalDisks[0].name = \"${DATA_DISK_NAME}\"" \
+    "${LIMA_CONFIG}"
+  printf "Starting VM '%s'...\n" "${VM_NAME}"
+  limactl start --progress "${VM_NAME}"
+fi
+
+# The initial SSH ControlMaster is established before provisioning adds the
+# guest user to the docker group. Restart once so subsequent shells inherit the
+# new supplementary group without requiring a manual logout or reboot.
+if ! limactl shell --workdir / "${VM_NAME}" -- docker ps >/dev/null 2>&1; then
+  printf "Refreshing VM sessions so Docker group membership takes effect...\n"
+  limactl stop "${VM_NAME}"
+  limactl start --progress "${VM_NAME}"
+fi
+limactl shell --workdir / "${VM_NAME}" -- docker ps >/dev/null 2>&1 || \
+  die "Docker is not accessible to the VM user after restart; inspect provisioning logs"
+
+cat <<EOF
+
+VM is ready.
+  Host:    ${HOST_ARCH}
+  Guest:   ${TARGET_ARCH}
+  Config:  ${LIMA_CONFIG}
+  Shell:   make vm-shell
+  Checks:  make vm-check
+  HTTP:    http://127.0.0.1:8080
+  Repo:    /workspace/usecloudos
+  Data:    /data
+EOF
