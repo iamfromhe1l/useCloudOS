@@ -24,7 +24,7 @@ fixtures intercept network requests only inside component or browser tests.
 - Rollup Visualizer plus an enforced bundle budget.
 
 ```text
-frontend/
+core/frontend/
 ├── .storybook/             component workbench configuration
 ├── stories/                design-system and shell stories
 ├── tests/                  Playwright visual/accessibility checks
@@ -34,7 +34,7 @@ frontend/
     ├── pages/              thin lazy route entry points
     ├── widgets/            desktop, system bar, dock, control center, app views
     ├── features/           user interactions, theme choices, wallpaper storage
-    ├── entities/           DTOs, queries, container/application identity
+    ├── entities/           DTOs, queries, system/application identity
     └── shared/             base API client, UI wrappers, theme, helpers, assets
 ```
 
@@ -56,7 +56,7 @@ Dependencies and font assets are pinned by `package-lock.json`.
 
 ## Development workflow
 
-Run the backend in Lima in one terminal:
+Use `make dev` to build/register Containers and start the complete workflow. For separate Core debugging, run the backend in Lima in one terminal (stop its systemd service first if already running):
 
 ```bash
 make vm-start
@@ -72,8 +72,9 @@ make frontend-dev
 Open <http://localhost:5173>. The routes are:
 
 - `/` — wallpaper-backed Home workspace with live widgets and launchers;
-- `/containers` — Docker application window and lifecycle controls;
-- `/containers/:id` — segmented Overview, Stats, Ports, and Logs view;
+- `/apps/containers` — Docker application window and lifecycle controls;
+- `/apps/containers/:id` — segmented Overview, Stats, Ports, and Logs view;
+- `/store` — local catalog and package sideload;
 - `/settings` — maximized system Settings window;
 - any unknown route — themed fallback screen.
 
@@ -150,7 +151,7 @@ Playwright starts its own Vite server and mocks network only in the test
 process. Install its Chromium runtime once if a fresh machine does not have it:
 
 ```bash
-cd frontend
+cd core/frontend
 npx playwright install chromium
 ```
 
@@ -162,6 +163,6 @@ make frontend-analyze
 cd frontend && npm run visual:update
 ```
 
-The production build is emitted to `frontend/dist`. A future deployment must
+The production build is emitted to `core/frontend/dist`. A future deployment must
 serve that directory and route `/api` to the backend; Vite's proxy is only for
 development.

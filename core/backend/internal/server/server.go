@@ -22,8 +22,16 @@ type responseRecorder struct {
 	http.ResponseWriter
 	status int
 }
-func(recorder *responseRecorder)Unwrap()http.ResponseWriter{return recorder.ResponseWriter}
-func(recorder *responseRecorder)Flush(){if recorder.status==0{recorder.WriteHeader(200)};if flusher,ok:=recorder.ResponseWriter.(http.Flusher);ok{flusher.Flush()}}
+
+func (recorder *responseRecorder) Unwrap() http.ResponseWriter { return recorder.ResponseWriter }
+func (recorder *responseRecorder) Flush() {
+	if recorder.status == 0 {
+		recorder.WriteHeader(200)
+	}
+	if flusher, ok := recorder.ResponseWriter.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
 
 func (recorder *responseRecorder) WriteHeader(status int) {
 	recorder.status = status

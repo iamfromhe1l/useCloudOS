@@ -77,9 +77,10 @@ frontend-dev:
 	@npm --prefix core/frontend run dev
 
 frontend-test:
-	@npm --prefix core/frontend test
+	@npm test
 
 frontend-build:
+	@npm run build:shared
 	@npm --prefix core/frontend run build
 
 frontend-storybook:
@@ -99,15 +100,20 @@ frontend-budget:
 
 .PHONY: frontend-format frontend-format-check frontend-lint frontend-lint-fix frontend-check
 frontend-format:
-	@npm --prefix core/frontend run format
+	@npm run format
 frontend-format-check:
-	@npm --prefix core/frontend run format:check
+	@npm run format:check
 frontend-lint:
-	@npm --prefix core/frontend run lint
+	@npm run lint
 frontend-lint-fix:
-	@npm --prefix core/frontend run lint:fix
+	@npm run lint -- --fix
 frontend-check:
-	@npm --prefix core/frontend run check
+	@npm run format:check
+	@npm run lint
+	@cd core/frontend && node scripts/check-architecture.mjs
+	@npm test
+	@npm run build
+	@cd core/frontend && node scripts/check-bundle-budget.mjs
 
 .PHONY: dev test lint format format-check build core-backend-build core-frontend-build app-containers-build app-containers-test app-containers-pack platform-bootstrap app-validate app-pack
 dev:
@@ -117,14 +123,16 @@ platform-bootstrap:
 build:
 	@npm run build
 	@./scripts/backend-build
+	@./scripts/app-containers-build
+	@./scripts/app-files-build
 test:
-	@go test ./core/backend/... ./apps/containers/backend/...
+	@go test ./core/backend/... ./apps/containers/backend/... ./apps/files/backend/...
 	@npm test
 lint:
-	@go vet ./core/backend/... ./apps/containers/backend/...
+	@go vet ./core/backend/... ./apps/containers/backend/... ./apps/files/backend/...
 	@npm run lint
 format:
-	@gofmt -w core/backend apps/containers/backend
+	@gofmt -w core/backend apps/containers/backend apps/files/backend
 	@npm run format
 format-check:
 	@npm run format:check
@@ -150,3 +158,20 @@ platform-check:
 packages-check:
 	@npm run build:shared
 	@node scripts/check-npm-packages.mjs
+
+.PHONY: app-files-build app-files-test app-files-pack app-files-sign app-files-install-dev
+app-files-build:
+	@./scripts/app-files-build
+app-files-test:
+	@limactl shell --workdir /workspace/usecloudos usecloud-dev -- /usr/local/go/bin/go test ./apps/files/backend/...
+	@npm test -w @usecloud/files
+app-files-pack:
+	@./scripts/app-files-pack
+app-files-sign:
+	@./scripts/app-sign-dev files
+app-files-install-dev:
+	@limactl shell --workdir /workspace/usecloudos usecloud-dev -- sudo bash scripts/platform-admin-guest -X POST 'http://127.0.0.1:8080/api/v1/apps/install?confirm=1' --data-binary @artifacts/files-0.1.0.usecloud
+
+.PHONY: files-check
+files-check:
+	@./scripts/files-check

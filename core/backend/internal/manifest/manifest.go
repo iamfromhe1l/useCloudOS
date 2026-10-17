@@ -16,7 +16,7 @@ import (
 
 const APIVersion = "usecloud.io/v1"
 const PlatformVersion = "0.1.0"
-const PermissionVersion = "1"
+const PermissionVersion = "2"
 
 var Permissions = map[string]string{
 	"system.read": "Read system information", "storage.app-data": "Store application data",
@@ -24,6 +24,22 @@ var Permissions = map[string]string{
 	"network.lan": "Access local network", "network.internet": "Access Internet",
 	"docker.read": "Read Docker containers", "docker.manage": "Manage Docker containers",
 	"notifications.send": "Send notifications", "background.run": "Run in background",
+	"storage.shared.read": "Read files in shared storage", "storage.shared.write": "Create, modify and permanently delete shared files",
+}
+
+func PermissionMetadata() map[string]map[string]string {
+	result := map[string]map[string]string{}
+	for id, title := range Permissions {
+		risk := "low"
+		if strings.HasPrefix(id, "storage.") || strings.HasPrefix(id, "docker.") {
+			risk = "medium"
+		}
+		if strings.HasSuffix(id, ".write") || id == "docker.manage" {
+			risk = "high"
+		}
+		result[id] = map[string]string{"id": id, "title": title, "description": title, "risk": risk, "category": strings.Split(id, ".")[0]}
+	}
+	return result
 }
 
 type Metadata struct {
@@ -39,9 +55,10 @@ type Platform struct {
 	HostVersion int    `json:"hostVersion" yaml:"hostVersion"`
 }
 type Runtime struct {
-	Type         string `json:"type" yaml:"type"`
-	Image        string `json:"image,omitempty" yaml:"image,omitempty"`
-	InternalPort int    `json:"internalPort,omitempty" yaml:"internalPort,omitempty"`
+	Type         string   `json:"type" yaml:"type"`
+	Image        string   `json:"image,omitempty" yaml:"image,omitempty"`
+	InternalPort int      `json:"internalPort,omitempty" yaml:"internalPort,omitempty"`
+	Command      []string `json:"command,omitempty" yaml:"command,omitempty"`
 }
 type Frontend struct {
 	Type    string   `json:"type" yaml:"type"`
@@ -152,6 +169,14 @@ func (m Manifest) Validate() error {
 	if m.Runtime.Type != "container" && (m.Runtime.Image != "" || m.Runtime.InternalPort != 0) {
 		return errors.New("container options require container runtime")
 	}
+	if len(m.Runtime.Command) > 32 || m.Runtime.Type != "container" && len(m.Runtime.Command) > 0 {
+		return errors.New("command requires container runtime and at most 32 arguments")
+	}
+	for _, arg := range m.Runtime.Command {
+		if len(arg) > 4096 || strings.ContainsRune(arg, '\x00') {
+			return errors.New("invalid OCI command argument")
+		}
+	}
 	if m.Frontend != nil {
 		for _, style := range m.Frontend.Styles {
 			if !SafePath(style) || !strings.HasPrefix(style, "frontend/") || !strings.HasSuffix(style, ".css") {
@@ -160,7 +185,7 @@ func (m Manifest) Validate() error {
 		}
 		switch m.Frontend.Type {
 		case "web-component":
-			if !SafePath(m.Frontend.Entry) || !strings.HasPrefix(m.Frontend.Entry, "frontend/") || !strings.HasSuffix(m.Frontend.Entry,".js") || !elementPattern.MatchString(m.Frontend.Element) {
+			if !SafePath(m.Frontend.Entry) || !strings.HasPrefix(m.Frontend.Entry, "frontend/") || !strings.HasSuffix(m.Frontend.Entry, ".js") || !elementPattern.MatchString(m.Frontend.Element) {
 				return errors.New("invalid component entry/element")
 			}
 		case "external":
@@ -188,7 +213,9 @@ func (m Manifest) Validate() error {
 	if m.Navigation.ColorRole != "primary" && m.Navigation.ColorRole != "secondary" && m.Navigation.ColorRole != "tertiary" {
 		return errors.New("invalid navigation colorRole")
 	}
-	if strings.HasPrefix(m.Navigation.Icon,"assets/") && (!SafePath(m.Navigation.Icon)||!strings.HasSuffix(m.Navigation.Icon,".png")){return errors.New("app icon must be a safe PNG asset")}
+	if strings.HasPrefix(m.Navigation.Icon, "assets/") && (!SafePath(m.Navigation.Icon) || !strings.HasSuffix(m.Navigation.Icon, ".png")) {
+		return errors.New("app icon must be a safe PNG asset")
+	}
 	return nil
 }
 

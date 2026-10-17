@@ -12,4 +12,4 @@ printf "Building Linux cloud-core in VM '%s'...\n" "${VM_NAME}"
 limactl shell --workdir "${GUEST_BACKEND_DIR}" "${VM_NAME}" -- \
   /usr/local/go/bin/go build -trimpath -ldflags "${ldflags}" -o bin/cloud-core ./cmd/cloud-core
 guest_arch="$(limactl shell --workdir / "${VM_NAME}" -- uname -m)"
-printf 'Built backend/bin/cloud-core (Linux %s).\n' "${guest_arch}"
+printf 'Built core/backend/bin/cloud-core (Linux %s).\n' "${guest_arch}"

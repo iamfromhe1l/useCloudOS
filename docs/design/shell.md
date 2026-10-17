@@ -9,7 +9,7 @@ its contents.
 
 The edge-to-edge system bar touches the viewport top. Its fixed height is
 --system-bar-height. Left: Home launcher, current application and optional
-useCloudOS identity. Right: shared CPU/RAM queries, Docker state, minute clock
+useCloudOS identity. Right: shared CPU/RAM queries, installed-app state, minute clock
 and right-most Control Center trigger. Network is not fabricated.
 
 Workspace geometry uses only these root variables:
@@ -31,7 +31,7 @@ ends above dock height + inset + gap. Browser tests enforce this invariant.
 ## Desktop
 
 DesktopGrid has named areas and one consistent gutter. Expanded uses 12
-columns: server full row, resources 8/storage 4, Docker 5/system 7. Medium uses
+columns: server full row, resources 8/storage 4, applications 5/system 7. Medium uses
 logical two-column areas; Compact stacks. Text cannot decide column widths.
 Each widget shares DesktopWidget/WidgetHeader/WidgetContent/WidgetFooter.
 
@@ -42,7 +42,8 @@ have no route.
 
 ## Application identity and dock
 
-entities/application owns the application registry: id, name, route, icon,
+The persistent Core App Registry supplies installed applications. The frontend
+entities/application model maps that metadata to id, name, route, icon,
 colorRole, availability, dock and desktop. Dock never defines independent
 destinations. Its active app has a tonal capsule and an open dot; unavailable
 apps remain legible. Radix Toolbar manages arrow/Home/End navigation and Radix
@@ -51,7 +52,7 @@ Tooltip provides names. aria-current identifies the route. Compact shows labels.
 ## Control Center and Settings
 
 Control Center is a Radix Dialog at the upper-right on desktop and a sheet on
-Compact. Real status is separate from quick actions. Docker is a status tile;
+Compact. Real status is separate from quick actions. Installed apps have a status tile;
 Theme is actionable; Network and Backup explicitly say Coming later.
 There is no fake notifications feed.
 

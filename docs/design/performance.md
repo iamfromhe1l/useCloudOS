@@ -1,5 +1,10 @@
 # Frontend performance and energy policy
 
+Security/Files milestone: Core initial JS 141.1 KiB gzip versus 140.9 KiB before;
+CSS remains 10.1 KiB, font subsets 73.0 KiB. Files loads approximately 177.8 KiB JS
+and 5.2 KiB CSS only on open (including its independent React/query runtime).
+Containers chunks are unchanged. No Core budget was raised.
+
 The shell should remain visually quiet and computationally cheap on a machine
 that is also running home-server workloads. Effects have a cost budget just as
 JavaScript and fonts do.
@@ -25,7 +30,7 @@ make frontend-budget
 make frontend-analyze
 ```
 
-The report is written to `frontend/dist/stats.html` and is not committed.
+The report is written to `core/frontend/dist/stats.html` and is not committed.
 
 ## Rendering and animation
 
@@ -88,6 +93,12 @@ Measured baseline comparison using the same manifest budget script:
 
 No budget limit was increased. Storybook documentation/a11y tooling is a
 separate developer build and is not shipped in the application.
+
+After the modular-platform extraction, the same script measured initial JS
+140.9 KiB, CSS 10.1 KiB and fonts 73.0 KiB. Containers contributes no JavaScript
+to clean Core: its approximately 165 KiB gzip runtime (including its independent
+React/router/query dependencies) loads only when opened. No individual app
+chunk exceeds the 200 KiB limit. Versioned app assets cache independently.
 
 ## Growing lists
 

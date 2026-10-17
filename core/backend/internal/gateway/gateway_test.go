@@ -15,9 +15,11 @@ import (
 
 func TestSocketProxyPermissionsAndFailure(t *testing.T) {
 	root, err := os.MkdirTemp("/tmp", "uc-gw-")
-	if err != nil { t.Fatal(err) }
-	t.Cleanup(func(){os.RemoveAll(root)})
-	_ = os.Mkdir(filepath.Join(root, "example"), 0755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.RemoveAll(root) })
+	_ = os.Mkdir(filepath.Join(root, "example"), 0750)
 	listener, err := net.Listen("unix", filepath.Join(root, "example/example.sock"))
 	if err != nil {
 		t.Fatal(err)
@@ -33,7 +35,7 @@ func TestSocketProxyPermissionsAndFailure(t *testing.T) {
 	repository := registrytest.New()
 	a := registry.Application{Manifest: registrytest.Manifest(), Status: "running", Grants: []string{"system.read"}}
 	_ = repository.Save(context.Background(), a)
-	handler := auth.Auth{Development: true}.Protect(Gateway{Repository: repository, SocketRoot: root})
+	handler := auth.Auth{Development: true}.Protect(Gateway{Repository: repository, SocketRoot: root, AllowUntrusted: true})
 	for _, test := range []struct {
 		method, path string
 		status       int

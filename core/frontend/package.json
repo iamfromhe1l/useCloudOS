@@ -47,7 +47,7 @@
     "@usecloud/ui": "0.1.0",
     "@usecloud/theme": "0.1.0",
     "@usecloud/app-sdk": "0.1.0",
-    "@usecloud/manifest": "0.1.0"
+    "@usecloud/manifest": "0.2.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

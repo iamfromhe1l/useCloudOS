@@ -1,7 +1,7 @@
 # Security boundaries
 
 Core authenticates opaque, hashed, expiring sessions stored in PostgreSQL.
-Passwords use bcrypt. HttpOnly/SameSite cookies, same-origin checks, bounded
+Passwords use versioned Argon2id, with bcrypt migration on login. HttpOnly/SameSite cookies, same-origin checks, bounded
 request bodies and gateway permission routing form the current foundation.
 Administrator capabilities and read-only ordinary-user policy are enforced
 server-side. Frontend SDK checks are only UX hints.
@@ -16,11 +16,11 @@ unknown manifest fields, incompatible versions and oversized archives. Extractio
 uses a new private staging directory and exclusive file creation. Binary package
 paths and persistent data paths are distinct. IDs are safe slugs.
 
-Trust levels are unsigned/signed/verified. Only unsigned is currently produced.
-Signature-shaped metadata is rejected rather than pretending verification.
-Production refuses unsigned native/embedded code. Development enables it only
-through a conspicuous explicit policy and install confirmation. Full signing
-must use standard audited cryptography and a real trust store, not fake badges.
+Trust levels are unsigned/signed/verified. Ed25519 verifies canonical package
+contents; PostgreSQL publisher trust distinguishes signed from verified and
+supports revocation. Production refuses untrusted native/embedded code. See
+[implemented security contract](../security/README.md) for sessions, capability
+revocation, signing format, developer keys and remaining deployment risks.
 
 Web Components execute in the shell browser context. Shadow DOM is not a
 security sandbox. Untrusted frontend code should use a separate origin/external
@@ -29,7 +29,8 @@ UI, or explicitly sandboxed iframe integration, not embedded host privileges.
 Core temporarily runs as root to orchestrate systemd. Apps have dedicated
 accounts, private runtime directories, NoNewPrivileges, PrivateTmp and restricted
 writable paths. Containers receives Docker group membership only with granted
-Docker capabilities. This grants root-equivalent daemon power, not read-only
+docker.manage. docker.read alone never grants socket group membership.
+This grants root-equivalent daemon power, not read-only
 isolation. Move privileged Docker operations to a capability broker/helper in a
 future hardening step; do not give other apps this capability casually.
 

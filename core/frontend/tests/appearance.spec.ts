@@ -58,7 +58,9 @@ test('accent swatches, theme modes and keyboard dock', async ({ page }) => {
     page.locator('[data-dock]').getByRole('link', { name: 'Settings', exact: true }),
   ).toBeFocused()
   await page.keyboard.press('End')
-  await expect(page.locator('[data-dock]').getByRole('link', { name: 'Containers', exact: true })).toBeFocused()
+  await expect(
+    page.locator('[data-dock]').getByRole('link', { name: 'Containers', exact: true }),
+  ).toBeFocused()
 })
 
 test('system mode follows operating system changes', async ({ page }) => {

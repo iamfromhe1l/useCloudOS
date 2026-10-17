@@ -3,6 +3,8 @@ set -Eeuo pipefail
 
 [ "$(uname -s)" = Linux ] || { echo "Docker smoke requires Linux." >&2; exit 1; }
 api_url="${CLOUD_CORE_URL:-http://127.0.0.1:8080}"
+bash scripts/platform-admin-guest "$api_url/api/v1/session" >/dev/null
+curl(){ command curl -b /data/platform/config/admin-session.cookies "$@"; }
 container_name="cloud-core-smoke-$$"
 image="alpine:3.22"
 

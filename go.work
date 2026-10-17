@@ -3,4 +3,5 @@ go 1.27
 use (
     ./core/backend
     ./apps/containers/backend
+    ./apps/files/backend
 )

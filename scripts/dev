@@ -4,11 +4,25 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/backend-common"
 "${SCRIPT_DIR}/vm-start"
 "${SCRIPT_DIR}/backend-install"
-"${SCRIPT_DIR}/app-containers-pack"
+IFS=',' read -r -a apps <<< "${APPS:-containers}"
 # Development preinstall uses exactly the public installer/registry contract.
-if ! curl -fsS http://127.0.0.1:8080/api/v1/apps | grep -q '"id":"containers"'; then
-  curl -fsS -X POST 'http://127.0.0.1:8080/api/v1/apps/install?confirm=1' \
-    --data-binary "@${REPO_ROOT}/artifacts/containers-0.1.0.usecloud"
+for attempt in {1..30}; do
+  if curl -fsS http://127.0.0.1:8080/api/v1/health >/dev/null; then break; fi
+  sleep 1
+done
+for app in "${apps[@]}"; do
+  case "$app" in containers|files) ;; none) continue;; *) echo "Unknown development preinstall: $app" >&2; exit 1;; esac
+  "${SCRIPT_DIR}/app-${app}-pack"
+  limactl shell --workdir "${GUEST_REPO_ROOT}" "${VM_NAME}" -- sudo bash -s -- "$app" <<'GUEST'
+set -Eeuo pipefail
+app="$1"
+request=(bash scripts/platform-admin-guest)
+if ! "${request[@]}" http://127.0.0.1:8080/api/v1/apps | jq -e --arg id "$app" '.applications | any(.manifest.metadata.id == $id)' >/dev/null; then
+  "${request[@]}" -X POST 'http://127.0.0.1:8080/api/v1/apps/install?confirm=1' --data-binary "@artifacts/$app-0.1.0.usecloud" >/dev/null
 fi
+"${request[@]}" -X POST "http://127.0.0.1:8080/api/v1/apps/$app/start"
+GUEST
+done
+echo 'Owner credentials are private: limactl shell usecloud-dev -- sudo cat /data/platform/config/owner-password'
 cd "${REPO_ROOT}"
 exec npm run dev -w @usecloud/core-frontend

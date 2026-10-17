@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
@@ -27,6 +28,8 @@ type Manager struct {
 	Bus                   *events.Bus
 	Root, DataRoot        string
 	AllowUnsignedEmbedded bool
+	ResolveTrust          func(context.Context, *apppackage.Package) error
+	KeyAllowed            func(context.Context, string) bool
 	mu                    sync.Mutex
 }
 
@@ -38,17 +41,28 @@ func (m *Manager) Install(ctx context.Context, p *apppackage.Package, consent bo
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	var empty registry.Application
+	if m.ResolveTrust != nil {
+		if err := m.ResolveTrust(ctx, p); err != nil {
+			return empty, err
+		}
+	}
 	if !consent {
 		return empty, errors.New("explicit permission/trust confirmation required")
 	}
-	if p.Trust == "unsigned" && (p.Manifest.Runtime.Type == "native" || p.Manifest.Frontend != nil && p.Manifest.Frontend.Type == "web-component") && !m.AllowUnsignedEmbedded {
+	if p.Trust != "verified" && (p.Manifest.Runtime.Type == "native" || p.Manifest.Frontend != nil && p.Manifest.Frontend.Type == "web-component") && !m.AllowUnsignedEmbedded {
 		return empty, errors.New("unsigned executable/embedded applications are disabled; use an explicit development trust policy")
 	}
 	id := p.Manifest.Metadata.ID
 	apps, err := m.Repository.List(ctx)
-	if err != nil { return empty, err }
+	if err != nil {
+		return empty, err
+	}
 	if p.Manifest.Frontend != nil && p.Manifest.Frontend.Type == "web-component" {
-		for _, existing := range apps { if existing.Manifest.Frontend != nil && existing.Manifest.Frontend.Element == p.Manifest.Frontend.Element { return empty, errors.New("custom element is already owned by another application") } }
+		for _, existing := range apps {
+			if existing.Manifest.Frontend != nil && existing.Manifest.Frontend.Element == p.Manifest.Frontend.Element {
+				return empty, errors.New("custom element is already owned by another application")
+			}
+		}
 	}
 	if _, err := m.Repository.Get(ctx, id); err == nil {
 		return empty, errors.New("application already installed; use update")
@@ -60,9 +74,15 @@ func (m *Manager) Install(ctx context.Context, p *apppackage.Package, consent bo
 	}
 	// Other app users may traverse the root, but cannot list it or enter peers'
 	// private 0750 directories. They do not belong to a shared writable group.
-	if err := os.Chmod(m.Root, 0751); err != nil { return empty, err }
-	if err := os.MkdirAll(m.DataRoot, 0751); err != nil { return empty, err }
-	if err := os.Chmod(m.DataRoot, 0751); err != nil { return empty, err }
+	if err := os.Chmod(m.Root, 0751); err != nil {
+		return empty, err
+	}
+	if err := os.MkdirAll(m.DataRoot, 0751); err != nil {
+		return empty, err
+	}
+	if err := os.Chmod(m.DataRoot, 0751); err != nil {
+		return empty, err
+	}
 	stage, err := os.MkdirTemp(m.Root, ".install-")
 	if err != nil {
 		return empty, err
@@ -94,12 +114,19 @@ func (m *Manager) Install(ctx context.Context, p *apppackage.Package, consent bo
 	}
 	now := time.Now().UTC()
 	app := registry.Application{Manifest: p.Manifest, Status: "installed", Trust: p.Trust, Digest: p.Digest, InstallPath: versionPath, DataPath: dataPath, InstalledAt: now, UpdatedAt: now, Grants: append([]string{}, p.Manifest.Permissions...)}
+	app.PackageBytes = p.SizeBytes
+	if p.Signature != nil {
+		app.PublisherKey = p.Signature.KeyID
+		app.PublisherName = p.Signature.PublisherName
+		app.ContentDigest = p.Signature.Digest
+	}
 	if err = m.Repository.Save(ctx, app); err != nil {
 		os.RemoveAll(destination)
 		return empty, err
 	}
 	m.emit(ctx, id, "app.installed")
 	if err = m.Runtime.Start(ctx, app); err != nil {
+		slog.ErrorContext(ctx, "Application service failed to start", "app_id", id, "error", err)
 		app.Status = "failed"
 		app.LastError = "Application service failed to start"
 		_ = m.Repository.Save(ctx, app)
@@ -122,6 +149,12 @@ func (m *Manager) Action(ctx context.Context, id, action string) error {
 	app, err := m.Repository.Get(ctx, id)
 	if err != nil {
 		return err
+	}
+	if action != "stop" && m.KeyAllowed != nil && !m.KeyAllowed(ctx, app.PublisherKey) {
+		return errors.New("publisher key revoked")
+	}
+	if action != "stop" && !m.AllowUnsignedEmbedded && (app.Manifest.Runtime.Type == "native" || app.Manifest.Frontend != nil && app.Manifest.Frontend.Type == "web-component") && (app.Trust != "verified" || app.PublisherKey == "") {
+		return errors.New("untrusted executable application cannot start under current trust policy")
 	}
 	switch action {
 	case "start":
@@ -207,13 +240,40 @@ func (m *Manager) Update(ctx context.Context, p *apppackage.Package, consent boo
 	if err != nil {
 		return err
 	}
-	if p.Trust == "unsigned" && !m.AllowUnsignedEmbedded {
+	if m.ResolveTrust != nil {
+		if err := m.ResolveTrust(ctx, p); err != nil {
+			return err
+		}
+	}
+	if old.PublisherKey != "" && (p.Signature == nil || p.Signature.KeyID != old.PublisherKey) {
+		return errors.New("publisher change or signature downgrade requires a new installation")
+	}
+	if old.Trust == "verified" && p.Trust != "verified" {
+		return errors.New("verified trust downgrade rejected")
+	}
+	if p.Trust != "verified" && !m.AllowUnsignedEmbedded {
 		return errors.New("unsigned update disabled")
 	}
 	if old.Manifest.Metadata.Version == p.Manifest.Metadata.Version {
 		return errors.New("version already installed")
 	}
-	if old.Manifest.Frontend != nil && p.Manifest.Frontend != nil && p.Manifest.Frontend.Type == "web-component" && old.Manifest.Frontend.Element == p.Manifest.Frontend.Element { return errors.New("frontend release requires a new version-qualified Custom Element name") }
+	if old.Manifest.Runtime.Type != p.Manifest.Runtime.Type || (old.Manifest.Backend == nil) != (p.Manifest.Backend == nil) {
+		return errors.New("runtime/backend kind changes require explicit uninstall and reinstall; data is retained")
+	}
+	if p.Manifest.Frontend != nil && p.Manifest.Frontend.Type == "web-component" {
+		apps, err := m.Repository.List(ctx)
+		if err != nil {
+			return err
+		}
+		for _, existing := range apps {
+			if existing.Manifest.Metadata.ID != p.Manifest.Metadata.ID && existing.Manifest.Frontend != nil && existing.Manifest.Frontend.Element == p.Manifest.Frontend.Element {
+				return errors.New("custom element is already owned by another application")
+			}
+		}
+	}
+	if old.Manifest.Frontend != nil && p.Manifest.Frontend != nil && p.Manifest.Frontend.Type == "web-component" && old.Manifest.Frontend.Element == p.Manifest.Frontend.Element {
+		return errors.New("frontend release requires a new version-qualified Custom Element name")
+	}
 	stage, err := os.MkdirTemp(m.Root, ".update-")
 	if err != nil {
 		return err
@@ -238,20 +298,51 @@ func (m *Manager) Update(ctx context.Context, p *apppackage.Package, consent boo
 	app.Manifest = p.Manifest
 	app.InstallPath = next
 	app.Digest = p.Digest
+	app.PackageBytes = p.SizeBytes
 	app.Trust = p.Trust
-	app.Grants = append([]string{}, p.Manifest.Permissions...)
+	// Revoked existing grants stay revoked. Consent approves only NEW requests.
+	app.Grants = []string{}
+	for _, permission := range p.Manifest.Permissions {
+		requestedBefore := false
+		for _, prior := range old.Manifest.Permissions {
+			if prior == permission {
+				requestedBefore = true
+				break
+			}
+		}
+		if old.Has(permission) || !requestedBefore {
+			app.Grants = append(app.Grants, permission)
+		}
+	}
+	if p.Signature != nil {
+		app.PublisherKey = p.Signature.KeyID
+		app.PublisherName = p.Signature.PublisherName
+		app.ContentDigest = p.Signature.Digest
+	}
 	app.UpdatedAt = time.Now().UTC()
 	rollback := func(cause error) error {
-		_ = m.Runtime.Stop(ctx, app)
-		_ = m.Runtime.Start(ctx, old)
-		_ = m.Repository.Save(ctx, old)
-		return fmt.Errorf("update rolled back: %w", cause)
+		recovery, cancel := context.WithTimeout(context.WithoutCancel(ctx), 20*time.Second)
+		defer cancel()
+		stopErr := m.Runtime.Stop(recovery, app)
+		var restoreErr error
+		if stopErr == nil {
+			restoreErr = m.Runtime.Start(recovery, old)
+		}
+		if stopErr != nil || restoreErr != nil {
+			old.Status = "failed"
+			old.LastError = "Application update rollback requires administrator recovery"
+		} else {
+			old.Status = m.Runtime.Status(recovery, old)
+			_ = os.RemoveAll(next)
+		}
+		saveErr := m.Repository.Save(recovery, old)
+		return fmt.Errorf("update rolled back: %w", errors.Join(cause, stopErr, restoreErr, saveErr))
 	}
 	if err = m.Runtime.Start(ctx, app); err != nil {
 		return rollback(err)
 	}
 	app.Status = m.Runtime.Status(ctx, app)
-	if app.Status != "running" && app.Manifest.Backend != nil {
+	if app.Status != "running" && (app.Manifest.Backend != nil || app.Manifest.Runtime.Type == "container") {
 		return rollback(errors.New("health check failed"))
 	}
 	if err = m.Repository.Save(ctx, app); err != nil {

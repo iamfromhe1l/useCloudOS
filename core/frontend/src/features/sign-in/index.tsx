@@ -8,6 +8,7 @@ export function SessionGate({ children }: PropsWithChildren) {
     queryKey: ['session'],
     queryFn: () => request('/api/v1/session'),
     retry: false,
+    refetchInterval: 60_000,
   })
   if (session.isPending) return <LoadingState message="Connecting to useCloudOS..." />
   if (session.error instanceof ApiError && session.error.status === 401) return <SignIn />

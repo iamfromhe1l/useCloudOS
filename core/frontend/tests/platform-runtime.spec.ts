@@ -2,12 +2,16 @@
 import { readFile } from 'node:fs/promises'
 
 import { expect, test } from '@playwright/test'
+
+import { realSession } from './real-session'
+test.use({ trace: 'off' })
 test('independent Containers installation, browser load and removal', async ({ page, request }) => {
   test.skip(
     process.env.USECLOUD_INTEGRATION !== '1',
     'Requires real Lima Core and a Containers package; no production mocks',
   )
   const api = 'http://127.0.0.1:8080'
+  await realSession(request, page)
   const before = await request.get(api + '/api/v1/apps')
   const registry = (await before.json()) as {
     applications: { manifest: { metadata: { id: string } } }[]

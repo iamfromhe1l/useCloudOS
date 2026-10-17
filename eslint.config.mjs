@@ -30,7 +30,9 @@ const architecture = {
           : specifier
         const crossPrivate =
           (filename.includes('/core/frontend/') &&
-            (target.includes('/apps/') || specifier.startsWith('@usecloud/containers'))) ||
+            (target.includes('/apps/') ||
+              (/^@usecloud\//.test(specifier) &&
+                !/^@usecloud\/(ui|theme|app-sdk|manifest|tooling)(\/|$)/.test(specifier)))) ||
           (filename.includes('/apps/') && target.includes('/core/')) ||
           (filename.includes('/packages/') &&
             (target.includes('/core/') || target.includes('/apps/')))

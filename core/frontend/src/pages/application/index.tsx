@@ -17,7 +17,9 @@ export function ApplicationPage() {
     )
   return (
     <AppWindow appId={app.id}>
-      <AppHostErrorBoundary key={app.id}><AppHost application={app.installed} route={route} /></AppHostErrorBoundary>
+      <AppHostErrorBoundary key={app.id + app.installed.manifest.metadata.version}>
+        <AppHost application={app.installed} route={route} />
+      </AppHostErrorBoundary>
     </AppWindow>
   )
 }

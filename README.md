@@ -11,7 +11,9 @@ examples/    external-developer starting points
 infra/       Lima, systemd and deployment configuration
 ```
 
-Core owns desktop, users/permissions, registry, installer and gateway. Native app
+Core owns desktop, users/permissions, registry, installer and gateway. Containers
+and Files are independently installed apps. Packages support Ed25519 signatures
+and local publisher trust/revocation. Native app
 backends run under systemd through private Unix sockets; frontend modules load
 on demand as Custom Elements. Mature external web apps keep their own UI.
 
@@ -35,3 +37,8 @@ Read [Lima](docs/development/lima.md), [backend](docs/development/backend.md),
 [frontend](docs/development/frontend.md), [frontend architecture](docs/development/frontend-architecture.md),
 [platform architecture](docs/architecture/README.md), [app developer guide](docs/apps/README.md)
 and the [frozen design contract](docs/design/README.md).
+
+Use `AUTH=required APPS=containers,files make dev` to enable real owner login and
+both development apps. See [security](docs/security/README.md) for private bootstrap
+credentials, session policy, signing and filesystem boundaries. `APPS=none` avoids
+optional app builds/preinstall and leaves the current registry untouched.

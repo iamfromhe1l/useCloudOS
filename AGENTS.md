@@ -88,7 +88,20 @@ groups, switches, tooltips, menus, selects and focus/keyboard behavior.
 Do not introduce native color pickers, production mock data or animation loops.
 Keep static wallpapers in IndexedDB as Blobs, never large localStorage base64.
 
-## Verification
+## Security contract
+
+Signed is not verified: cryptographic integrity and locally trusted publisher
+identity are distinct. Revoked keys cannot install, update or start apps.
+Never bypass the Core gateway or expose app sockets to browsers. Credentials,
+session tokens and signing private keys never belong in frontend storage/logs.
+Shared filesystem roots come from platform configuration and capabilities,
+never arbitrary manifest paths; broad root access is not a default grant.
+Preserve root-safe, no-symlink/no-mount-crossing operations and streaming.
+Uploaded active content is attachment-only, never executable shell-origin UI.
+Native app trust is not a sandbox. Docker manage remains root-equivalent.
+Read docs/security/* for implemented policy and residual risks.
+
+## Validation
 
 Run frontend format check, ESLint/FSD/cycle checks, TypeScript, Vitest,
 production build and bundle budget. UI changes also require reviewed

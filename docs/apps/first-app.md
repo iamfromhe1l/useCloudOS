@@ -22,3 +22,8 @@ until publication, consume the tarballs produced by `npm pack` in each package.
 
 The Hello example uses only public package exports, follows the current shell
 theme, and asks the host to navigate to Settings. It needs no backend service.
+
+For a trusted installation, sign the packed artifact, verify its signature and
+approve the publisher's public fingerprint before sideloading. Exact commands
+are in [package signing](../security/app-signing.md); signed and verified are
+different states. No private signing key belongs in this example repository.

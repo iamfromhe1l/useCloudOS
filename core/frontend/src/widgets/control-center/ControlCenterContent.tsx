@@ -1,4 +1,5 @@
 import { useApplicationRegistry } from '@/entities/application'
+import { useNotifications } from '@/entities/notification'
 import { useFilesystems } from '@/entities/storage'
 import { useSystemInfo } from '@/entities/system'
 import { useTheme } from '@/shared/config/theme'
@@ -8,6 +9,7 @@ import { Icon, InfoRow, QuickSettingTile, StatusChip } from '@/shared/ui'
 import styles from './ControlCenter.module.css'
 export function ControlCenterContent() {
   const system = useSystemInfo()
+  const notifications = useNotifications()
   const registry = useApplicationRegistry()
   const storage = useFilesystems()
   const { resolvedMode, setMode } = useTheme()
@@ -69,7 +71,14 @@ export function ControlCenterContent() {
       <section className={styles.notifications}>
         <div>
           <h2>Notifications</h2>
-          <p>No recent system events</p>
+          {notifications.isPending && <p>Loading notifications…</p>}
+          {notifications.isError && <p>Notifications unavailable.</p>}
+          {notifications.data?.notifications.length === 0 && <p>No recent system events</p>}
+          <ul className="space-y-2 [overflow-wrap:anywhere]">
+            {notifications.data?.notifications.map((notification) => (
+              <li key={notification.id}>{notification.message}</li>
+            ))}
+          </ul>
         </div>
         <Icon name="notifications" className="size-5" />
       </section>

@@ -131,7 +131,7 @@ func (d *Database) Save(ctx context.Context, a registry.Application) error {
 	if _, err = tx.Exec(ctx, "INSERT INTO installed_apps(id,record)VALUES($1,$2) ON CONFLICT(id)DO UPDATE SET record=EXCLUDED.record,updated_at=now()", a.Manifest.Metadata.ID, raw); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, "INSERT INTO app_versions(app_id,version,digest)VALUES($1,$2,$3)ON CONFLICT(app_id,version)DO NOTHING", a.Manifest.Metadata.ID, a.Manifest.Metadata.Version, a.Digest); err != nil {
+	if _, err = tx.Exec(ctx, "INSERT INTO app_versions(app_id,version,digest,trust,publisher_key,content_digest)VALUES($1,$2,$3,$4,$5,$6)ON CONFLICT(app_id,version)DO NOTHING", a.Manifest.Metadata.ID, a.Manifest.Metadata.Version, a.Digest, a.Trust, a.PublisherKey, a.ContentDigest); err != nil {
 		return err
 	}
 	if _, err = tx.Exec(ctx, "DELETE FROM app_permissions WHERE app_id=$1", a.Manifest.Metadata.ID); err != nil {

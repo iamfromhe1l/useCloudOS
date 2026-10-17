@@ -13,6 +13,11 @@ export interface InstalledApplication {
   installedAt: string
   updatedAt: string
   lastError?: string
+  publisherKey?: string
+  publisherName?: string
+  publisherRevoked?: boolean
+  packageBytes?: number
+  effectivePermissions?: string[]
 }
 export interface Application {
   id: string
@@ -39,7 +44,9 @@ export function useApplicationRegistry() {
   })
 }
 export function toApplication(app: InstalledApplication): Application {
-  const m = app.manifest
+  return { ...manifestIdentity(app.manifest), installed: app }
+}
+export function manifestIdentity(m: AppManifest): Application {
   return {
     id: m.metadata.id,
     name: m.metadata.name,
@@ -49,7 +56,6 @@ export function toApplication(app: InstalledApplication): Application {
     availability: 'ready',
     dock: m.navigation.dock,
     desktop: m.navigation.desktop,
-    installed: app,
     iconURL: m.navigation.icon.startsWith('assets/')
       ? '/app-assets/' + m.metadata.id + '/' + m.metadata.version + '/' + m.navigation.icon
       : undefined,

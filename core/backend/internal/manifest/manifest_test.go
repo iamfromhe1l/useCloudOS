@@ -55,3 +55,20 @@ func TestPaths(t *testing.T) {
 		}
 	}
 }
+
+func TestOCICommandValidation(t *testing.T) {
+	m := registrytest.Manifest()
+	m.Backend = nil
+	m.Runtime = manifest.Runtime{Type: "container", Image: "alpine:3.22", InternalPort: 8080, Command: []string{"sleep", "3600"}}
+	if err := m.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	m.Runtime.Command = []string{"bad\x00argument"}
+	if m.Validate() == nil {
+		t.Fatal("accepted NUL in command")
+	}
+	m.Runtime = manifest.Runtime{Type: "native", Command: []string{"sh"}}
+	if m.Validate() == nil {
+		t.Fatal("accepted container command for native runtime")
+	}
+}
