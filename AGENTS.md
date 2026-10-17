@@ -109,3 +109,26 @@ dark/light responsive Playwright snapshots, axe and Storybook build.
 Any intentional architecture/design deviation MUST update the relevant docs
 in the same change. Preserve system API and Lima workflow. App APIs use the
 versioned gateway contract rather than legacy Core container endpoints.
+
+## Persistent project context and GitHub workflow
+
+For any substantial useCloudOS task, also read
+`docs/ai/usecloudos-project-context.md` before implementation.
+
+That file is the canonical cross-session project context for:
+- current architecture and runtime boundaries;
+- product/design direction;
+- public package contracts;
+- development environment and validation baseline;
+- near-term roadmap;
+- canonical GitHub repository;
+- required branch/commit/PR workflow.
+
+Repository state is more authoritative than conversational memory if they ever
+conflict.
+
+Substantial work must use the existing GitHub repository
+`iamfromhe1l/useCloudOS` through a dedicated branch, logical commits, push,
+and a Pull Request to `main`. Do not initialize a new repository and do not
+merge a PR without explicit user approval.
+
