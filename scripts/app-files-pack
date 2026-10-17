@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/backend-common"
+"${SCRIPT_DIR}/app-files-build"
+limactl shell --workdir "${GUEST_REPO_ROOT}" "${VM_NAME}" -- bash -ceu '
+staging="$(mktemp -d)"
+trap '\''rm -rf "$staging"'\'' EXIT
+mkdir -p "$staging/frontend" "$staging/backend" artifacts
+cp apps/files/manifest/manifest.yaml "$staging/manifest.yaml"
+cp -R apps/files/frontend/dist/. "$staging/frontend/"
+cp apps/files/backend/bin/files-service "$staging/backend/files-service"
+/usr/local/go/bin/go run ./core/backend/cmd/usecloud app pack "$staging" artifacts/files-0.1.0.usecloud
+'
+"${SCRIPT_DIR}/app-sign-dev" files

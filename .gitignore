@@ -34,3 +34,6 @@ artifacts/
 **/playwright-report/
 **/test-results/
 *.tsbuildinfo
+*.pkcs8
+*.private.pem
+*.key

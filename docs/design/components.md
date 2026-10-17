@@ -2,9 +2,9 @@
 
 ## Foundations and controls
 
-shared/ui contains PillButton (CVA), StatusChip, Tooltip, TonalSurface, InfoRow,
+@usecloud/ui contains PillButton (CVA), StatusChip, Tooltip, TonalSurface, InfoRow,
 MetricWidget, QuickSettingTile, TerminalPanel and async feedback states.
-shared/ui/selection is the public API for Radix ToggleGroup-based
+@usecloud/ui/selection is the public API for Radix ToggleGroup-based
 SegmentedControl and Switch; it stays out of the initial shell chunk.
 
 Radix owns Dialog focus trapping, Tabs selection/keyboard behavior, RadioGroup
@@ -17,8 +17,8 @@ behavioral primitives.
 
 entities/application owns AppIcon, AppWindow and WindowTitleBar because they
 combine application identity with chrome. They depend only on shared UI and
-their own registry. ContainerItem is a presentation entity with an actions
-slot, so lifecycle features are composed above it.
+the registry-derived application model. ContainerItem belongs privately to the
+Containers app, with lifecycle features composed inside that application.
 
 ## Widgets and features
 
@@ -26,12 +26,13 @@ SystemBar is decomposed into SystemBarSection, SystemBarItem, SystemMetric and
 SystemClock. The Control Center trigger is passed as a slot by app/shell, so
 peer widgets do not import each other.
 
-DesktopWidget defines header/content/footer. Resource, Storage, Docker, System
+DesktopWidget defines header/content/footer. Resource, Storage, Applications, System
 and Server widgets each own one domain query and presentation. DesktopGrid
 composes named slots; DesktopApplications reads the registry.
 
-Features own user actions: container filtering/lifecycle, theme switching,
+Core features own platform actions: application installation, theme switching,
 accent selection, wallpaper persistence and Control Center toggle.
+Container filtering/lifecycle remain in the installable Containers app.
 Pages compose widgets; they do not fetch or embed lifecycle state.
 
 ## Accessibility and overflow

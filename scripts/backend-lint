@@ -7,12 +7,12 @@ source "${SCRIPT_DIR}/backend-common"
 
 require_backend_vm
 printf "Formatting and vetting cloud-core in VM '%s'...\n" "${VM_NAME}"
-limactl shell --workdir "${GUEST_BACKEND_DIR}" "${VM_NAME}" -- bash -ceu '
-unformatted="$(/usr/local/go/bin/gofmt -l .)"
+limactl shell --workdir "${GUEST_REPO_ROOT}" "${VM_NAME}" -- bash -ceu '
+unformatted="$(/usr/local/go/bin/gofmt -l core/backend apps/containers/backend apps/files/backend)"
 if [ -n "${unformatted}" ]; then
   echo "The following Go files need gofmt:" >&2
   echo "${unformatted}" >&2
   exit 1
 fi
-/usr/local/go/bin/go vet ./...
+/usr/local/go/bin/go vet ./core/backend/... ./apps/containers/backend/... ./apps/files/backend/...
 '

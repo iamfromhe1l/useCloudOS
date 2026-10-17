@@ -10,13 +10,13 @@
     "examples/*"
   ],
   "scripts": {
-    "build:packages": "npm run build -w @usecloud/theme && npm run build -w @usecloud/manifest && npm run build -w @usecloud/app-sdk && npm run build -w @usecloud/ui",
+    "build:packages": "npm run build:shared",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint core/frontend apps/*/frontend packages examples --max-warnings 0",
     "test": "npm test --workspaces --if-present",
-    "build": "npm run build -w @usecloud/theme && npm run build -w @usecloud/manifest && npm run build -w @usecloud/app-sdk && npm run build -w @usecloud/ui && npm run build -w @usecloud/containers && npm run build -w @usecloud/core-frontend",
-    "build:shared": "npm run build -w @usecloud/theme && npm run build -w @usecloud/manifest && npm run build -w @usecloud/app-sdk && npm run build -w @usecloud/ui"
+    "build": "npm run build:shared && npm run build -w @usecloud/containers && npm run build -w @usecloud/files && npm run build -w @usecloud/core-frontend && npm run build -w @usecloud/example-hello",
+    "build:shared": "npm run build -w @usecloud/tooling && npm run build -w @usecloud/theme && npm run build -w @usecloud/manifest && npm run build -w @usecloud/app-sdk && npm run build -w @usecloud/ui"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

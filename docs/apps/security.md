@@ -14,7 +14,8 @@ socket or URL. Native app accounts are not root.
 
 `/var/run/docker.sock` controls a root-capable daemon. The Containers service
 needs it to implement the existing Docker domain. Its dedicated account receives
-Docker group membership only after capability approval; there is no chmod 777.
+Docker group membership only after explicit docker.manage approval; docker.read
+alone never grants raw daemon access. There is no chmod 777.
 Do not expose this socket to frontend code or arbitrary apps. Only the limited
 Containers API is browser-accessible, through Core's permission gate.
 

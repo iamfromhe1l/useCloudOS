@@ -10,16 +10,22 @@ import (
 var ErrNotFound = errors.New("application not installed")
 
 type Application struct {
-	Manifest    manifest.Manifest `json:"manifest"`
-	Status      string            `json:"status"`
-	Trust       string            `json:"trust"`
-	Digest      string            `json:"digest"`
-	InstallPath string            `json:"-"`
-	DataPath    string            `json:"-"`
-	InstalledAt time.Time         `json:"installedAt"`
-	UpdatedAt   time.Time         `json:"updatedAt"`
-	LastError   string            `json:"lastError,omitempty"`
-	Grants      []string          `json:"grants"`
+	Manifest             manifest.Manifest `json:"manifest"`
+	Status               string            `json:"status"`
+	Trust                string            `json:"trust"`
+	Digest               string            `json:"digest"`
+	InstallPath          string            `json:"-"`
+	DataPath             string            `json:"-"`
+	InstalledAt          time.Time         `json:"installedAt"`
+	UpdatedAt            time.Time         `json:"updatedAt"`
+	LastError            string            `json:"lastError,omitempty"`
+	Grants               []string          `json:"grants"`
+	PublisherKey         string            `json:"publisherKey,omitempty"`
+	PublisherName        string            `json:"publisherName,omitempty"`
+	PublisherRevoked     bool              `json:"publisherRevoked,omitempty"`
+	PackageBytes         int64             `json:"packageBytes,omitempty"`
+	ContentDigest        string            `json:"contentDigest,omitempty"`
+	EffectivePermissions []string          `json:"effectivePermissions"`
 }
 
 func (a Application) Has(permission string) bool {

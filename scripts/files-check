@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/backend-common"
+require_backend_vm
+limactl shell --workdir "${GUEST_REPO_ROOT}" "${VM_NAME}" -- sudo bash -s <<'GUEST'
+set -Eeuo pipefail
+api=http://127.0.0.1:8080
+request=(bash scripts/platform-admin-guest)
+if "${request[@]}" "$api/api/v1/apps" | jq -e '.applications|any(.manifest.metadata.id=="files")' >/dev/null; then
+  echo 'Files already installed. Refusing to remove an existing user application.' >&2; exit 1
+fi
+temporary="$(mktemp -d /tmp/usecloud-files-check.XXXXXX)"
+directory="proof-$(openssl rand -hex 8)"
+installed=0
+cleanup(){
+ if [ "$installed" = 1 ]; then
+   "${request[@]}" -X DELETE "$api/api/apps/files/entries?path=$directory&recursive=1" >/dev/null || true
+   "${request[@]}" -X DELETE "$api/api/v1/apps/files?confirm=1" >/dev/null || true
+ fi
+ rm -f "$temporary/upload.bin" "$temporary/download.bin"
+ rmdir "$temporary"
+}
+trap cleanup EXIT
+"${request[@]}" -X POST "$api/api/v1/apps/inspect" --data-binary @artifacts/files-0.1.0.usecloud | jq -e '.trust=="verified"' >/dev/null
+"${request[@]}" -X POST "$api/api/v1/apps/install?confirm=1" --data-binary @artifacts/files-0.1.0.usecloud | jq -e '.status=="running"' >/dev/null
+installed=1
+systemctl show usecloud-app-files.service -p User --value | grep -qx usecloud-app-files
+"${request[@]}" -X POST -H 'Content-Type: application/json' "$api/api/apps/files/directories" --data "{\"path\":\"$directory\"}"
+dd if=/dev/zero of="$temporary/upload.bin" bs=1M count=32 status=none
+"${request[@]}" -T "$temporary/upload.bin" "$api/api/apps/files/content?path=$directory/test.bin"
+"${request[@]}" "$api/api/apps/files/content?path=$directory/test.bin" -o "$temporary/download.bin"
+cmp "$temporary/upload.bin" "$temporary/download.bin"
+"${request[@]}" -X POST -H 'Content-Type: application/json' "$api/api/apps/files/move" --data "{\"source\":\"$directory/test.bin\",\"target\":\"$directory/renamed.bin\"}"
+"${request[@]}" "$api/api/apps/files/entries?path=$directory" | jq -e '.entries[0].name=="renamed.bin"' >/dev/null
+"${request[@]}" -X PUT -H 'Content-Type: application/json' "$api/api/v1/apps/files/permissions/storage.shared.write" --data '{"granted":false}'
+status="$(curl -s -b /data/platform/config/admin-session.cookies -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' "$api/api/apps/files/directories" --data "{\"path\":\"$directory/denied\"}")"
+[ "$status" = 403 ]
+"${request[@]}" -X PUT -H 'Content-Type: application/json' "$api/api/v1/apps/files/permissions/storage.shared.write" --data '{"granted":true}'
+"${request[@]}" -X DELETE "$api/api/apps/files/entries?path=$directory/renamed.bin"
+"${request[@]}" -X POST -H 'Content-Type: application/json' "$api/api/apps/files/directories" --data "{\"path\":\"$directory/retained\"}"
+"${request[@]}" -X DELETE "$api/api/v1/apps/files?confirm=1"
+installed=0
+test -d "/data/shared/$directory/retained"
+# Only our random proof directory is removed. Shared storage and app data remain.
+rmdir "/data/shared/$directory/retained" "/data/shared/$directory"
+curl -fsS "$api/api/v1/health" | jq -e '.status=="ok"' >/dev/null
+echo 'Files signed install, 32 MiB streaming, operations, revoke, uninstall/data-retention smoke passed.'
+GUEST

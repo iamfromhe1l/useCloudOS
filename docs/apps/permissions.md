@@ -1,4 +1,4 @@
-# Capability registry v1
+# Capability registry v2
 
 Manifest identifiers and human descriptions are exported by @usecloud/manifest
 and `/api/v1/permissions`. Current capabilities cover system.read, app data,
@@ -15,6 +15,12 @@ An authenticated administrator may manage installed apps; ordinary-user policy
 is currently read-only. Per-user app ACLs remain an additive foundation task.
 
 Capabilities are not kernel confinement. In particular Docker daemon access is
-root-equivalent even when a manifest calls it docker.read. A future privileged
+root-equivalent. Only docker.manage grants direct group access; docker.read alone
+does not. A future privileged
 broker must replace direct daemon access for strict least privilege. Do not
 promise OS-level read-only enforcement that this implementation does not provide.
+
+Shared storage read/write are now implemented capabilities. Permission revocation,
+update consent, risk metadata and role intersections are described in
+[security permissions](../security/permissions.md). Revoked grants stay revoked
+across package updates; new permissions require explicit approval.

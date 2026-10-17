@@ -3,9 +3,11 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/backend-common"
 require_backend_vm
-limactl shell --workdir "${GUEST_REPO_ROOT}" "${VM_NAME}" -- bash -s <<'GUEST'
+limactl shell --workdir "${GUEST_REPO_ROOT}" "${VM_NAME}" -- sudo bash -s <<'GUEST'
 set -Eeuo pipefail
 api=http://127.0.0.1:8080
+bash scripts/platform-admin-guest "$api/api/v1/session" >/dev/null
+curl(){ command curl -b /data/platform/config/admin-session.cookies "$@"; }
 package=/workspace/usecloudos/artifacts/containers-0.1.0.usecloud
 curl -fsS "$api/api/v1/health" | jq -e '.status == "ok"' >/dev/null
 if curl -fsS "$api/api/v1/apps" | jq -e '.applications | any(.manifest.metadata.id == "containers")' >/dev/null; then
@@ -19,7 +21,7 @@ cleanup() {
   fi
 }
 trap cleanup EXIT
-curl -fsS -X POST "$api/api/v1/apps/inspect" --data-binary "@$package" | jq -e '.trust == "unsigned"' >/dev/null
+curl -fsS -X POST "$api/api/v1/apps/inspect" --data-binary "@$package" | jq -e '.trust == "verified"' >/dev/null
 response="$(curl -fsS -X POST "$api/api/v1/apps/install?confirm=1" --data-binary "@$package")"
 installed=1
 printf '%s' "$response" | jq -e '.status == "running"' >/dev/null

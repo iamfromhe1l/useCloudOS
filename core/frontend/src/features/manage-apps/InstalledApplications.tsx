@@ -1,14 +1,19 @@
 import * as Dialog from '@radix-ui/react-dialog'
-import { permissionDescriptions } from '@usecloud/manifest'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import {
+  AppIcon,
   type InstalledApplication,
+  toApplication,
+  TrustBadge,
   useApplicationRegistry,
   useAppMutation,
 } from '@/entities/application'
+import { formatBytes } from '@/shared/lib'
 import { EmptyState, ErrorState, LoadingState, PillButton, StatusChip } from '@/shared/ui'
+
+import { ApplicationPermissions } from './ApplicationPermissions'
 export function InstalledApplications() {
   const query = useApplicationRegistry()
   if (query.isPending) return <LoadingState />
@@ -39,25 +44,43 @@ function ApplicationManagement({ app }: { app: InstalledApplication }) {
   return (
     <section className="space-y-3 rounded-shape-medium bg-surface-container-high p-4">
       <div className="flex flex-wrap items-center gap-3">
+        <AppIcon application={toApplication(app)} />
         <h3 className="text-title-medium font-semibold">{m.metadata.name}</h3>
         <StatusChip tone={app.status === 'failed' ? 'error' : 'neutral'}>{app.status}</StatusChip>
         <span className="text-body-small">
-          {m.metadata.version} · {m.runtime.type} · {app.trust}
+          {m.metadata.version} · {m.runtime.type}
         </span>
       </div>
       <p className="text-body-small">
         By {m.metadata.author}. Application data is retained separately from the package.
       </p>
-      <ul className="text-body-small text-on-surface-variant">
-        {app.grants.map((p) => (
-          <li key={p}>{permissionDescriptions[p as keyof typeof permissionDescriptions] ?? p}</li>
-        ))}
-      </ul>
+      <TrustBadge trust={app.trust} publisher={app.publisherName} revoked={app.publisherRevoked} />
+      <details className="space-y-3">
+        <summary className="cursor-pointer text-label-large">
+          Application details and permissions
+        </summary>
+        <p className="text-body-small">
+          Runtime: {m.runtime.type}.{' '}
+          {m.backend ? 'Native service supervised by systemd.' : 'No native backend service.'}
+        </p>
+        <p className="text-body-small">
+          Data: retained independently of the package. Shared storage is never removed by uninstall.
+        </p>
+        <p className="text-body-small">
+          Package size:{' '}
+          {app.packageBytes ? formatBytes(app.packageBytes) : 'Not measured for this installation'}.
+          Application-data usage is not tracked yet.
+        </p>
+        <ApplicationPermissions app={app} />
+        <Link to="/store" className="text-primary underline">
+          Check available updates in Store
+        </Link>
+      </details>
       <div className="flex flex-wrap items-center gap-2">
         <Link to={'/apps/' + m.metadata.id} className="text-primary underline">
           Open
         </Link>
-        {m.backend && (
+        {(m.backend || m.runtime.type === 'container') && (
           <>
             <PillButton disabled={mutation.isPending} onClick={() => action('restart')}>
               Restart

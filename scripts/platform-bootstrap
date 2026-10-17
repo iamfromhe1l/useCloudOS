@@ -3,7 +3,7 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/backend-common"
 require_backend_vm
-limactl shell --workdir "${GUEST_REPO_ROOT}" "${VM_NAME}" -- sudo bash -s <<'GUEST'
+limactl shell --workdir "${GUEST_REPO_ROOT}" "${VM_NAME}" -- sudo bash -s -- "${AUTH:-preserve}" <<'GUEST'
 set -Eeuo pipefail
 install -d -m 0750 /etc/usecloud
 install -d -m 0751 /data/platform/apps /data/platform/app-data
@@ -18,9 +18,21 @@ if [ ! -f /data/platform/config/dev.env ]; then
   umask 077
   password="$(openssl rand -hex 24)"
   printf 'CLOUD_CORE_DATABASE_URL=postgres://usecloud:%s@127.0.0.1:5432/usecloud?sslmode=disable\n' "$password" > /data/platform/config/dev.env
-  printf 'CLOUD_CORE_DEV_AUTH=1\nCLOUD_CORE_SECURE_COOKIE=0\nCLOUD_CORE_ALLOW_UNSIGNED_EMBEDDED=1\n' >> /data/platform/config/dev.env
+  printf 'CLOUD_CORE_DEV_AUTH=0\nCLOUD_CORE_DEV_HTTP=1\nCLOUD_CORE_SECURE_COOKIE=0\nCLOUD_CORE_ALLOW_UNSIGNED_EMBEDDED=1\n' >> /data/platform/config/dev.env
   printf 'POSTGRES_USER=usecloud\nPOSTGRES_PASSWORD=%s\nPOSTGRES_DB=usecloud\n' "$password" > /data/platform/config/postgres.env
 fi
+if [ ! -f /data/platform/config/owner-password ]; then
+  (umask 077; openssl rand -base64 24 > /data/platform/config/owner-password)
+fi
+if ! grep -q '^CLOUD_CORE_BOOTSTRAP_PASSWORD=' /data/platform/config/dev.env; then
+  printf 'CLOUD_CORE_BOOTSTRAP_PASSWORD=%s\n' "$(cat /data/platform/config/owner-password)" >> /data/platform/config/dev.env
+fi
+if [ "$1" = required ]; then
+  sed -i 's/^CLOUD_CORE_DEV_AUTH=.*/CLOUD_CORE_DEV_AUTH=0/' /data/platform/config/dev.env
+  if ! grep -q '^CLOUD_CORE_DEV_HTTP=' /data/platform/config/dev.env; then printf 'CLOUD_CORE_DEV_HTTP=1\n' >> /data/platform/config/dev.env; fi
+elif [ "$1" = bypass ]; then
+  sed -i 's/^CLOUD_CORE_DEV_AUTH=.*/CLOUD_CORE_DEV_AUTH=1/' /data/platform/config/dev.env
+elif [ "$1" != preserve ]; then echo 'AUTH must be required, bypass or preserve' >&2; exit 1; fi
 if ! grep -q '^CLOUD_CORE_APP_ROOT=' /data/platform/config/dev.env; then
   printf 'CLOUD_CORE_APP_ROOT=/data/platform/apps\nCLOUD_CORE_DATA_ROOT=/data/platform/app-data\nCLOUD_CORE_CATALOG_ROOT=/data/platform/catalog\n' >> /data/platform/config/dev.env
 fi

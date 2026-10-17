@@ -1,4 +1,6 @@
 import { InstalledApplications } from '@/features/manage-apps'
+import { PublisherTrust } from '@/features/publisher-trust'
+import { SessionSecurity } from '@/features/session-security'
 
 import { AppearanceSettings } from './AppearanceSettings'
 import { SettingsShell } from './SettingsShell'
@@ -11,7 +13,12 @@ export function SettingsApp() {
         network: <ComingLater title="Network" />,
         storage: <ComingLater title="Storage" />,
         apps: <InstalledApplications />,
-        users: <ComingLater title="Users" />,
+        users: (
+          <div className="space-y-8">
+            <SessionSecurity />
+            <PublisherTrust />
+          </div>
+        ),
         accessibility: <AccessibilitySettings />,
         system: <SystemSettings />,
         about: <AboutSettings />,

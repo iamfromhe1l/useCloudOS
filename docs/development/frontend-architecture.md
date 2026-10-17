@@ -48,5 +48,11 @@ Root Prettier formats code/docs/YAML; strict TypeScript and noUncheckedIndexedAc
 remain enabled. ESLint 9/TS6 remain compatible with installed accessibility tooling.
 
 Read docs/apps/frontend.md and docs/design/* before changing boundaries or UI.
+
+Files follows the same application FSD contract. Its file-entry entity, file-browser
+widget and create/upload/entry-actions features stay private to apps/files/frontend.
+No file manager domain primitive was promoted to @usecloud/ui. Core only adds
+generic trust, session and installed-app management UI. Manifest0.2.0 adds
+capability-v2 risk metadata and signature metadata; SDK host contract remains v1.
 Validate root format/lint/test/build, package tarball consumption, Storybook,
 responsive Playwright/axe and real platform install/open/uninstall proof.

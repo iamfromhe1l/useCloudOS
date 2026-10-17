@@ -1,5 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog'
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 
 import { ControlCenterTrigger } from '@/features/control-center-toggle'
 import { Icon } from '@/shared/ui'
@@ -9,8 +9,14 @@ const ControlCenterContent = lazy(() =>
   import('./ControlCenterContent').then((module) => ({ default: module.ControlCenterContent })),
 )
 export function ControlCenter({ initialOpen = false }: { initialOpen?: boolean }) {
+  const [open, setOpen] = useState(false)
+  // Open after the lazy trigger has been committed. Otherwise the pointer event
+  // that requested the chunk can race Radix's newly mounted dismissable layer.
+  useEffect(() => {
+    if (initialOpen) setOpen(true)
+  }, [initialOpen])
   return (
-    <Dialog.Root defaultOpen={initialOpen}>
+    <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
         <ControlCenterTrigger />
       </Dialog.Trigger>

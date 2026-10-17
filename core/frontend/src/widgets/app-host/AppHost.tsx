@@ -1,11 +1,13 @@
+import { useQueryClient } from '@tanstack/react-query'
 import type { ApplicationElement, HostContext } from '@usecloud/app-sdk'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { type InstalledApplication, useApplications } from '@/entities/application'
+import { notificationKeys } from '@/entities/notification'
 import { request } from '@/shared/api'
 import { useTheme } from '@/shared/config/theme'
-import { ErrorState, LoadingState, RetryAction } from '@/shared/ui'
+import { EmptyState, ErrorState, LoadingState, RetryAction } from '@/shared/ui'
 const modules = new Map<string, Promise<unknown>>()
 function loadModule(url: string) {
   let pending = modules.get(url)
@@ -27,10 +29,19 @@ export function AppHost({
 }) {
   const mount = useRef<HTMLDivElement>(null)
   const element = useRef<ApplicationElement | null>(null)
+  const eventSources = useRef(new Set<EventSource>())
+  useEffect(
+    () => () => {
+      for (const source of eventSources.current) source.close()
+      eventSources.current.clear()
+    },
+    [],
+  )
   const [failure, setFailure] = useState(false)
   const [loading, setLoading] = useState(true)
   const [attempt, setAttempt] = useState(0)
   const navigate = useNavigate()
+  const client = useQueryClient()
   const applications = useApplications()
   const { resolvedMode } = useTheme()
   const m = application.manifest
@@ -53,7 +64,7 @@ export function AppHost({
       version: 1,
       applicationId: m.metadata.id,
       route,
-      permissions: application.grants,
+      permissions: application.effectivePermissions ?? application.grants,
       theme: { mode: resolvedMode },
       styles: (m.frontend?.type === 'web-component' ? (m.frontend.styles ?? []) : []).map(
         (p) => base + p,
@@ -65,11 +76,12 @@ export function AppHost({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message }),
-          }),
+          }).then(() => client.invalidateQueries({ queryKey: notificationKeys.all })),
       },
       events: {
         subscribe: (listener) => {
           const source = new EventSource('/api/v1/events')
+          eventSources.current.add(source)
           source.onmessage = (event) => {
             try {
               listener(JSON.parse(event.data))
@@ -77,11 +89,23 @@ export function AppHost({
               /* ignore malformed events */
             }
           }
-          return () => source.close()
+          return () => {
+            source.close()
+            eventSources.current.delete(source)
+          }
         },
       },
     }),
-    [m, base, navigation, route, application.grants, resolvedMode],
+    [
+      m,
+      base,
+      navigation,
+      route,
+      application.grants,
+      application.effectivePermissions,
+      resolvedMode,
+      client,
+    ],
   )
   const context = useRef(host)
   useEffect(() => {
@@ -101,7 +125,7 @@ export function AppHost({
     async function mountApplication() {
       try {
         if (!frontend || frontend.type !== 'web-component') return
-        await loadModule(base + frontend.entry)
+        await loadModule(base + frontend.entry + (attempt ? '?retry=' + attempt : ''))
         await Promise.race([
           customElements.whenDefined(frontend.element),
           new Promise((_, reject) =>
@@ -142,6 +166,13 @@ export function AppHost({
           Open {m.metadata.name} in its own interface
         </a>
       </div>
+    )
+  if (!m.frontend)
+    return (
+      <EmptyState
+        title="Background application"
+        message="This application has no embedded interface. Manage its service and permissions in Settings → Apps."
+      />
     )
   return (
     <div className="min-w-0">

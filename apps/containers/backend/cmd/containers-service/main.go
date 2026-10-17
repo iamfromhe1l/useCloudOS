@@ -20,6 +20,7 @@ import (
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
 	if err := run(logger); err != nil {
 		logger.Error("containers-service stopped", "error", err)
 		os.Exit(1)
@@ -46,6 +47,10 @@ func run(logger *slog.Logger) error {
 		if info.Mode()&os.ModeSocket == 0 {
 			return errors.New("refusing to replace non-socket path")
 		}
+		if existing, err := net.DialTimeout("unix", socket, time.Second); err == nil {
+			existing.Close()
+			return errors.New("application socket is already in use")
+		}
 		if err := os.Remove(socket); err != nil {
 			return err
 		}
@@ -67,6 +72,7 @@ func run(logger *slog.Logger) error {
 	service := &http.Server{Handler: api.New(docker.NewService(provider), logger).Handler(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 45 * time.Second, IdleTimeout: 60 * time.Second}
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+	service.BaseContext = func(net.Listener) context.Context { return ctx }
 	result := make(chan error, 1)
 	go func() {
 		logger.Info("starting containers-service", "socket", socket)

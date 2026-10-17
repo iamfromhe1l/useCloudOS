@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Local development administrator client. Run inside Lima as root. Never emits credentials.
+set -Eeuo pipefail
+cookie=/data/platform/config/admin-session.cookies
+umask 077
+touch "$cookie"
+api=http://127.0.0.1:8080
+status="$(curl -s -b "$cookie" -o /dev/null -w '%{http_code}' "$api/api/v1/session")"
+if [ "$status" = 401 ]; then
+  jq -n --rawfile password /data/platform/config/owner-password \
+    '{username:"owner",password:($password|rtrimstr("\n"))}' |
+    curl -fsS -c "$cookie" -H 'Content-Type: application/json' --data-binary @- "$api/api/v1/login" >/dev/null
+fi
+curl -fsS -b "$cookie" "$@"

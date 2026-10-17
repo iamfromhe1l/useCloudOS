@@ -1,0 +1,29 @@
+apiVersion: usecloud.io/v1
+kind: App
+metadata:
+  id: files
+  name: Files
+  version: 0.1.0
+  description: Browse and manage your shared storage
+  author: useCloudOS
+platform: { minVersion: 0.1.0, hostVersion: 1 }
+runtime: { type: native }
+frontend:
+  type: web-component
+  entry: frontend/index.js
+  element: usecloud-files-v0-1-0
+  styles: [frontend/style.css]
+backend:
+  type: native
+  executable: backend/files-service
+  socket: files.sock
+  routes:
+    - { method: GET, path: /root, permission: storage.shared.read }
+    - { method: GET, path: /entries, permission: storage.shared.read }
+    - { method: GET, path: /content, permission: storage.shared.read }
+    - { method: PUT, path: /content, permission: storage.shared.write }
+    - { method: POST, path: /directories, permission: storage.shared.write }
+    - { method: POST, path: /move, permission: storage.shared.write }
+    - { method: DELETE, path: /entries, permission: storage.shared.write }
+navigation: { desktop: true, dock: true, icon: folder, colorRole: tertiary }
+permissions: [storage.shared.read, storage.shared.write, notifications.send, background.run]

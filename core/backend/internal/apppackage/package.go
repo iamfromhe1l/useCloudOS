@@ -8,8 +8,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
 	"image/png"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -23,10 +23,12 @@ const MaxArchiveBytes = 128 << 20
 const MaxExpandedBytes = 256 << 20
 
 type Package struct {
-	Manifest manifest.Manifest `json:"manifest"`
-	Trust    string            `json:"trust"`
-	Digest   string            `json:"digest"`
-	archive  *zip.Reader
+	Manifest  manifest.Manifest `json:"manifest"`
+	Trust     string            `json:"trust"`
+	Digest    string            `json:"digest"`
+	Signature *Signature        `json:"signature,omitempty"`
+	SizeBytes int64             `json:"sizeBytes"`
+	archive   *zip.Reader
 }
 
 func Inspect(data []byte) (*Package, error) {
@@ -44,7 +46,9 @@ func Inspect(data []byte) (*Package, error) {
 	var total uint64
 	var raw []byte
 	for _, f := range archive.File {
-		if f.UncompressedSize64 > MaxExpandedBytes { return nil, errors.New("package entry exceeds expanded limit") }
+		if f.UncompressedSize64 > MaxExpandedBytes {
+			return nil, errors.New("package entry exceeds expanded limit")
+		}
 		name := strings.TrimSuffix(f.Name, "/")
 		if !manifest.SafePath(name) || seen[name] || f.Mode()&os.ModeSymlink != 0 || (!f.Mode().IsRegular() && !f.FileInfo().IsDir()) {
 			return nil, fmt.Errorf("unsafe/duplicate package entry %q", f.Name)
@@ -68,8 +72,8 @@ func Inspect(data []byte) (*Package, error) {
 				return nil, err
 			}
 		}
-		if strings.HasPrefix(name, "signature/") {
-			return nil, errors.New("signature verification is not yet implemented; signed packages must not be accepted as unsigned")
+		if strings.HasPrefix(name, "signature/") && name != signaturePath {
+			return nil, errors.New("unknown signature entry")
 		}
 	}
 	m, err := manifest.Parse(raw)
@@ -82,14 +86,47 @@ func Inspect(data []byte) (*Package, error) {
 	if m.Backend != nil && !seen[m.Backend.Executable] {
 		return nil, errors.New("backend executable missing")
 	}
-	if m.Frontend != nil { for _, style := range m.Frontend.Styles { if !seen[style] { return nil, errors.New("frontend stylesheet missing") } } }
-	if strings.HasPrefix(m.Navigation.Icon,"assets/"){
-		found:=false
-		for _,file:=range archive.File{if file.Name!=m.Navigation.Icon{continue};found=true;if file.UncompressedSize64>256<<10{return nil,errors.New("icon exceeds 256 KiB")};reader,err:=file.Open();if err!=nil{return nil,err};config,err:=png.DecodeConfig(io.LimitReader(reader,256<<10));reader.Close();if err!=nil||config.Width>512||config.Height>512||config.Width<1||config.Height<1{return nil,errors.New("invalid icon dimensions/format")}}
-		if !found{return nil,errors.New("icon asset missing")}
+	if m.Frontend != nil {
+		for _, style := range m.Frontend.Styles {
+			if !seen[style] {
+				return nil, errors.New("frontend stylesheet missing")
+			}
+		}
+	}
+	if strings.HasPrefix(m.Navigation.Icon, "assets/") {
+		found := false
+		for _, file := range archive.File {
+			if file.Name != m.Navigation.Icon {
+				continue
+			}
+			found = true
+			if file.UncompressedSize64 > 256<<10 {
+				return nil, errors.New("icon exceeds 256 KiB")
+			}
+			reader, err := file.Open()
+			if err != nil {
+				return nil, err
+			}
+			config, err := png.DecodeConfig(io.LimitReader(reader, 256<<10))
+			reader.Close()
+			if err != nil || config.Width > 512 || config.Height > 512 || config.Width < 1 || config.Height < 1 {
+				return nil, errors.New("invalid icon dimensions/format")
+			}
+		}
+		if !found {
+			return nil, errors.New("icon asset missing")
+		}
+	}
+	signature, err := verifySignature(archive)
+	if err != nil {
+		return nil, err
+	}
+	trust := "unsigned"
+	if signature != nil {
+		trust = "signed"
 	}
 	sum := sha256.Sum256(data)
-	return &Package{Manifest: m, Trust: "unsigned", Digest: hex.EncodeToString(sum[:]), archive: archive}, nil
+	return &Package{Manifest: m, Trust: trust, Digest: hex.EncodeToString(sum[:]), Signature: signature, SizeBytes: int64(len(data)), archive: archive}, nil
 }
 
 // Extract requires a newly-created private staging directory. No pre-existing

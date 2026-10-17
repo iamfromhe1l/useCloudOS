@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/backend-common"
+require_backend_vm
+app="${1:?Usage: app-sign-dev files|containers}"
+case "$app" in files|containers) ;; *) echo 'Unknown first-party development artifact' >&2; exit 1;; esac
+limactl shell --workdir "${GUEST_REPO_ROOT}" "${VM_NAME}" -- sudo bash -s -- "$app" <<'GUEST'
+set -Eeuo pipefail
+app="$1"
+key=/data/platform/keys/development.pkcs8
+install -d -m 0700 /data/platform/keys
+tool=(/usr/local/go/bin/go run ./core/backend/cmd/usecloud app)
+if [ ! -f "$key" ]; then "${tool[@]}" keygen "$key"; fi
+"${tool[@]}" sign "artifacts/$app-0.1.0.usecloud" "$key" local-development 'Local development publisher'
+# This is a LOCAL development anchor, never a claim to an official production key.
+"${tool[@]}" public-key "$key" | jq '. + {publisherId:"local-development",name:"Local development publisher"}' |
+  bash scripts/platform-admin-guest -X POST -H 'Content-Type: application/json' --data-binary @- http://127.0.0.1:8080/api/v1/publishers
+install -d -m 0750 /data/platform/catalog
+install -m 0644 "artifacts/$app-0.1.0.usecloud" "/data/platform/catalog/$app-0.1.0.usecloud"
+GUEST

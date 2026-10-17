@@ -10,4 +10,4 @@ api_url="${CLOUD_CORE_URL:-http://127.0.0.1:8080}"
 
 printf "Running Docker API smoke test in VM '%s' against %s...\n" "${VM_NAME}" "${api_url}"
 limactl shell --workdir "${GUEST_REPO_ROOT}" "${VM_NAME}" -- \
-  env "CLOUD_CORE_URL=${api_url}" bash scripts/docker-smoke-guest
+  sudo env "CLOUD_CORE_URL=${api_url}" bash scripts/docker-smoke-guest
