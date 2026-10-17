@@ -33,8 +33,8 @@ Exact developer commands, from repository root:
 ```bash
 go run ./core/backend/cmd/usecloud app keygen /private/path/dev.pkcs8
 go run ./core/backend/cmd/usecloud app public-key /private/path/dev.pkcs8
-go run ./core/backend/cmd/usecloud app sign artifacts/files-0.1.0.usecloud /private/path/dev.pkcs8 my-publisher 'My publisher'
-go run ./core/backend/cmd/usecloud app verify artifacts/files-0.1.0.usecloud
+go run ./core/backend/cmd/usecloud app sign artifacts/files-0.2.0.usecloud /private/path/dev.pkcs8 my-publisher 'My publisher'
+go run ./core/backend/cmd/usecloud app verify artifacts/files-0.2.0.usecloud
 ```
 
 Parent directory must already exist. Keys are created exclusively with mode0600;

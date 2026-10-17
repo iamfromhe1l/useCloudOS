@@ -25,6 +25,7 @@ A fresh useCloudOS installation should contain a small platform Core and OS
 shell, not every product feature.
 
 Core provides the platform:
+
 - desktop/shell;
 - System Bar;
 - Dock;
@@ -41,6 +42,7 @@ Core provides the platform:
 - platform updates foundation.
 
 Product capabilities that can be independently installed belong in apps:
+
 - Containers;
 - Files;
 - Backup;
@@ -86,6 +88,7 @@ architectures.
 Containers has already been genuinely extracted from Core.
 
 This is a runtime boundary, not only a directory move:
+
 - Core does not import Moby for Containers business logic.
 - Core does not compile-time import Containers React components.
 - Containers backend is a separate native service.
@@ -174,6 +177,7 @@ preferably via a clean reverse-proxy host/subdomain strategy when available.
 ### Runtimes
 
 The architecture anticipates:
+
 - native applications;
 - OCI/container applications;
 - external/web applications.
@@ -190,6 +194,7 @@ external developer API.
 Generic React UI primitives only.
 
 Examples:
+
 - Button/IconButton;
 - StatusChip;
 - Tabs;
@@ -209,6 +214,7 @@ Do not create a generic `@usecloud/common` dumping ground.
 ### @usecloud/theme
 
 Framework-independent semantic theme/token contract:
+
 - Material color roles;
 - `--uc-*` CSS custom properties;
 - typography/shape/motion token definitions;
@@ -223,6 +229,7 @@ Framework-independent host/platform integration contract.
 React-specific bindings live in the React subpath/bindings, not in the core SDK.
 
 The SDK is for platform concerns such as:
+
 - app context;
 - permissions;
 - notifications;
@@ -262,6 +269,7 @@ Prefer proven reuse over speculative abstraction.
 ## Core database and application data
 
 PostgreSQL is used for platform state such as:
+
 - users/sessions foundation;
 - platform settings;
 - installed applications;
@@ -280,8 +288,9 @@ explicitly requests destructive removal.
 
 ## Security boundaries and known risks
 
-The platform already distinguishes unsigned/signed/verified trust metadata,
-but full signing/trust hardening is a current/next milestone if not yet merged.
+The platform cryptographically verifies Ed25519 package signatures and distinguishes
+unsigned, signed-unknown and verified-trusted publishers. Revocation is persisted.
+See docs/security for implemented protections and residual deployment risks.
 
 Never fake cryptographic verification.
 
@@ -299,6 +308,7 @@ App package extraction must remain bounded and traversal-safe.
 ## Frontend technology and architecture
 
 Core frontend stack:
+
 - React;
 - TypeScript;
 - Vite;
@@ -330,6 +340,21 @@ it belongs in an appropriate public workspace package.
 
 ## Frozen visual direction
 
+Design System 2.0 is the current authoritative design contract. Material You
+Expressive + desktop OS interaction + end-4 inspired modular shell composition
+
+- calm personal cloud simplicity. Read docs/design/README.md and audit-v2.md.
+  Core owns outer chrome; apps own content. Static titles are not buttons. Object
+  menus use shared Radix behavior with touch alternatives. Skeleton is initial-only;
+  background queries preserve existing content. UI changes require real-browser
+  dark/light responsive review; major redesigns require three serious QA rounds.
+
+UI/theme packages are 0.2.0; host contract remains v1. Files and Containers have
+independent 0.2.0 frontend releases. Files remains a private domain, not Core.
+Security/Files foundation now implements Argon2id sessions, real Ed25519 signatures,
+publisher trust and root-safe streaming Files. See docs/security for residual risks.
+Do not treat historical roadmap/measurements below as the current implementation.
+
 The previous `frontend-design` skill produced an unwanted
 editorial/SaaS-dashboard direction and must not be applied to this repository.
 
@@ -337,6 +362,7 @@ The current design contract is stored in `docs/design/*` and is considered a
 frozen baseline unless explicitly changed.
 
 Visual identity:
+
 - personal cloud OS, not a website/dashboard;
 - end-4 / illogical-impulse inspired desktop-shell density;
 - Material 3 / Material You semantic tonal system;
@@ -352,6 +378,7 @@ Visual identity:
 - app owns its content.
 
 Avoid:
+
 - giant marketing H1s inside applications;
 - generic SaaS/admin-dashboard composition;
 - text-navbar docks;
@@ -381,6 +408,7 @@ have explicit overflow behavior.
 ### Performance
 
 Keep the shell energy-efficient:
+
 - static wallpapers;
 - no ambient animation loops;
 - no WebGL/canvas visual effects for shell decoration;
@@ -396,6 +424,7 @@ Existing Core bundle budgets should not regress without a concrete reason.
 The project runs natively inside a Lima Debian VM.
 
 Known Intel development environment:
+
 - Debian GNU/Linux 13;
 - x86_64;
 - cloud kernel from Debian;
@@ -412,6 +441,7 @@ Do not redesign the VM architecture casually.
 ## Current validation baseline
 
 The modular migration previously reported:
+
 - Go tests/race/vet passing for backend modules;
 - amd64/arm64 static validation;
 - PostgreSQL integration passing;
@@ -427,6 +457,7 @@ The modular migration previously reported:
 - shell syntax and `git diff --check`.
 
 A previous post-extraction bundle snapshot was approximately:
+
 - Core initial JS: 140.9 KiB gzip;
 - Core CSS: 10.1 KiB gzip;
 - fonts: 73.0 KiB.
@@ -434,9 +465,10 @@ A previous post-extraction bundle snapshot was approximately:
 Treat exact numbers as historical reference, not permanent constants. Use the
 repository's current documented budgets as authoritative.
 
-## Near-term roadmap
+## Historical milestone roadmap
 
 After the successful Containers extraction, the next major direction is:
+
 1. harden auth/session/permission enforcement;
 2. implement real package signing/trust;
 3. improve Store / Installed Apps UX;
@@ -482,6 +514,7 @@ main
 ### Branch naming
 
 Use concise names such as:
+
 - `feat/<feature>`
 - `fix/<problem>`
 - `refactor/<scope>`
@@ -507,6 +540,7 @@ Do not commit knowingly broken intermediate states when avoidable.
 ### Pull requests
 
 Each substantial milestone should end with a PR to `main` that explains:
+
 - summary;
 - changes;
 - architecture impact;
@@ -529,6 +563,7 @@ reported separately.
 ### Secrets
 
 Never commit:
+
 - production credentials;
 - session secrets;
 - signing private keys;

@@ -56,3 +56,19 @@ generic trust, session and installed-app management UI. Manifest0.2.0 adds
 capability-v2 risk metadata and signature metadata; SDK host contract remains v1.
 Validate root format/lint/test/build, package tarball consumption, Storybook,
 responsive Playwright/axe and real platform install/open/uninstall proof.
+
+## Design System 2.0
+
+UI/theme 0.2.0 retain host contract v1 and all runtime boundaries. The Store page
+composes widgets/store; catalog cards/details own visual composition. Files
+entry-actions owns one action model for Radix context/overflow and AlertDialog.
+Public overlays use @usecloud/ui/overlays and Shadow PortalProvider. Import UI CSS
+before consumer Tailwind to preserve responsive cascade. After changing public
+exports, rebuild packages then restart Vite with --force; ordinary app development
+still builds independent artifacts, never Core imports. Vite ignores test reports
+and Storybook output to avoid QA-generated document reloads.
+
+Opt-in real visual audit uses USECLOUD_DESIGN_REVIEW=1 and design-review.spec.ts;
+USECLOUD_DESIGN_ROUND names local artifact folders. USECLOUD_REFRESH_FILES=1 is
+explicit test-only reinstall with data retained; never use it to remove another
+user's installation. See docs/design/audit-v2.md for the reviewed baseline/rounds.

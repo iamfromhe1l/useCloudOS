@@ -1,9 +1,22 @@
 # Frontend performance and energy policy
 
-Security/Files milestone: Core initial JS 141.1 KiB gzip versus 140.9 KiB before;
+Security/Files milestone: Core initial JS 141.2 KiB gzip versus 140.9 KiB before;
 CSS remains 10.1 KiB, font subsets 73.0 KiB. Files loads approximately 177.8 KiB JS
 and 5.2 KiB CSS only on open (including its independent React/query runtime).
 Containers chunks are unchanged. No Core budget was raised.
+
+## Design System 2.0
+
+Same measurement script: Core initial JS 143.7 KiB gzip (+2.5 KiB), CSS 11.6 KiB
+(+1.5 KiB), fonts unchanged at 73.0 KiB. No budget raised. Added initial code is
+named field/feedback/window actions and resource-popup trigger; Radix overlays
+stay lazy. Files 0.2 loads approximately 155.4 KiB total JS gzip plus 6.0 KiB CSS;
+Containers 0.2 approximately 177.5 KiB JS plus 6.1 KiB CSS, independently on open.
+App totals include their own React/query/router runtimes, not Core initial code.
+
+No animation library, remote font, ambient effect or polling interval was added.
+Bounded Skeleton is static; Spinner runs only during actual pending work.
+Context/overflow menus and resource popover share lazy public Radix modules.
 
 The shell should remain visually quiet and computationally cheap on a machine
 that is also running home-server workloads. Effects have a cost budget just as

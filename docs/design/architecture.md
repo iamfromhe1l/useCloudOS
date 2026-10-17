@@ -1,34 +1,26 @@
-# Design and FSD architecture
+# Design architecture and FSD
 
-The design vocabulary and Feature-Sliced Design are one contract.
-Read [frontend architecture](../development/frontend-architecture.md) for
-implementation details.
+app → pages → widgets → features → entities → shared inside each independent
+frontend. ESLint rejects upward/peer/private imports; module-graph validation
+rejects runtime cycles. Pages compose; entities own queries/identity; features
+own mutations and object actions; widgets own composition.
 
-app → pages → widgets → features → entities → shared
+Core store page delegates to widgets/store. Files browsing/list/view menu compose
+private entities/file-entry and create/upload/entry-actions features. One Files
+action model renders both context and overflow menus. Container lifecycle does
+the same. Domain components never move into generic packages.
 
-app composes peer shell widgets and installs providers/router. Pages are thin
-route entry points. Widgets assemble domain data and actions. Features own
-user interactions. Entities contain DTOs, queries, identity and presentation.
-Core shared contains the platform network client, private provider integration,
-formats and fonts/assets. Public primitives and framework-independent contracts
-live in @usecloud/ui, @usecloud/theme, @usecloud/app-sdk and @usecloud/manifest.
-Apps never import Core shared source.
+@usecloud/theme 0.2 owns semantic roles and typography/shape/spacing/motion.
+@usecloud/ui 0.2 ships compiled Tailwind styles and narrow public subpaths.
+The SDK host contract remains v1. Apps release independently as 0.2.0 Custom
+Elements with version-qualified names. Core owns outer AppWindow; app owns content.
+No compile-time app imports, shared React global or Module Federation.
 
-Application chrome belongs to entities/application so any widget can use it
-without importing another widget. The system bar accepts a Control Center
-slot; app composes them. This keeps the same-layer import rule intact.
+AppHost bounds content height and updates host context without remounting on
+ordinary background data refresh. Runtime mount identity is versioned frontend
+entry/element/styles, not unrelated registry fields. Shadow DOM scopes CSS;
+it is not a security sandbox. PortalProvider keeps app overlays scoped.
 
-Every business slice has index.ts/index.tsx. External consumers use @ aliases
-and public APIs. Relative imports stay inside a slice. ESLint rejects upward,
-peer-slice and internal-path imports; a module-graph check rejects runtime
-cycles. Shared infrastructure may expose named public submodules.
-
-Tailwind is the default for generic primitives and new app content, with CVA
-variants. Existing scoped shell geometry preserves the frozen baseline.
-app/styles only holds fonts, semantic mappings,
-fallback roles, typography, document base and shell geometry. UI primitive
-CSS is distributed by @usecloud/ui, never the Core global stylesheet.
-
-Intentional design or architecture deviations require documentation in the same
-change. Do not silently create a second shell, theme source, icon registry or
-query client.
+Read docs/development/frontend-architecture.md and docs/apps/frontend.md for
+runtime details. Custom CSS is limited to tokens/reset/fonts, inherited browser
+integration and canonical shell geometry. Tailwind/CVA is the default.

@@ -67,6 +67,12 @@ must not import higher/peer slices. Keep pages thin and JSX readable.
 ## Frozen design contract
 
 Before ANY frontend UI change, read docs/design/*, beginning with README.md.
+Design System 2.0 is the authoritative Material You OS identity. Never invent a
+new visual language for each app. Visual UI work requires real browser screenshot
+review in dark/light and responsive layouts; passing tests alone is insufficient.
+Use the audit → implement → capture → review → fix loop, with evidence recorded
+for major redesigns. Static titles are not actions; object menus need touch and
+keyboard alternatives, and background refresh must preserve valid content.
 useCloudOS is a personal cloud operating environment, not a web dashboard.
 Reuse the canonical SystemBar, desktop grid/widgets, application registry,
 AppWindow, Dock, Control Center and Settings controls.
@@ -85,6 +91,8 @@ Typography follows the centralized semantic scale. Dynamic strings must wrap,
 truncate with their full accessible value, or scroll without expanding layout.
 Prefer stable accessible Radix primitives for dialogs, tabs, radio/toggle
 groups, switches, tooltips, menus, selects and focus/keyboard behavior.
+Compose menus/dialogs via @usecloud/ui/overlays so independently bundled Radix
+copies do not create competing focus/layer runtimes within a consumer.
 Do not introduce native color pickers, production mock data or animation loops.
 Keep static wallpapers in IndexedDB as Blobs, never large localStorage base64.
 
@@ -116,6 +124,7 @@ For any substantial useCloudOS task, also read
 `docs/ai/usecloudos-project-context.md` before implementation.
 
 That file is the canonical cross-session project context for:
+
 - current architecture and runtime boundaries;
 - product/design direction;
 - public package contracts;
@@ -131,4 +140,3 @@ Substantial work must use the existing GitHub repository
 `iamfromhe1l/useCloudOS` through a dedicated branch, logical commits, push,
 and a Pull Request to `main`. Do not initialize a new repository and do not
 merge a PR without explicit user approval.
-

@@ -1,5 +1,12 @@
 # Responsive shell contract
 
+Design System 2.0: Compact Home puts application launchers before the widget
+stack so opening an app does not require scrolling past system data. Files uses
+mobile name/size rows and a full-width filter above its action row; expanded
+toolbar aligns path, filter and actions horizontally. Store stacks discovery,
+featured and catalog surfaces; detail is a focused view with Back. Settings keeps
+its responsive rail; icon labels hide on Medium without hiding the icons.
+
 | Mode     | Width       | Transformation                                                              |
 | -------- | ----------- | --------------------------------------------------------------------------- |
 | Compact  | <600 px     | Simplified bar, single-column widgets, fullscreen app below bar, bottom nav |

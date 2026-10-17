@@ -1,29 +1,38 @@
 # useCloudOS Design Contract
 
-STATUS: FROZEN BASELINE
+STATUS: FROZEN BASELINE — DESIGN SYSTEM 2.0
 
 useCloudOS is a personal cloud operating environment, not a web dashboard.
 
-Visual direction: Material You + end-4 inspired desktop shell + personal cloud simplicity.
-Before ANY frontend UI change: read docs/design/*.
+Material You Expressive + desktop OS interaction + end-4 inspired shell composition
 
-This contract covers the desktop, system bar, application workspace, launcher
-identity, utility panels and preference controls. It is the authoritative
-baseline, not a suggestion to apply a generic dashboard template.
+- calm personal cloud simplicity. This identity is authoritative for Core and
+  official applications. Do not invent a new style per app.
 
-## Application UI Integration
+Before ANY frontend UI change: read docs/design/*, starting here.
+The architecture remains frozen; DS 2.0 changes visual composition and interaction,
+not platform boundaries.
 
-Core owns desktop, SystemBar, Dock, wallpaper and outer application-window chrome.
-An installed app owns CONTENT, loaded independently through its Custom Element.
-Official React apps use @usecloud/ui and inherit @usecloud/theme --uc-* tokens.
-They must not recreate the shell or import Core private UI. Domain components
-stay in their owning app; generic primitives live in public packages.
+## Authoritative contract
 
-Read [foundations](foundations.md), [shell](shell.md), [components](components.md),
-[responsive rules](responsive.md), [performance](performance.md) and
-[architecture](architecture.md). [System](system.md) is the overview entry point.
+- [Foundations](foundations.md): density and design vocabulary.
+- [Color](color.md), [shape](shape.md), [spacing](spacing.md),
+  [typography](typography.md), [motion](motion.md).
+- [Shell](shell.md), [windows](windows.md), [Home](home.md).
+- [Components](components.md), [interaction](interaction.md),
+  [loading and feedback](loading-feedback.md).
+- [Files](files.md), [Store](store.md), [responsive](responsive.md).
+- [Architecture](architecture.md), [performance](performance.md),
+  [quality bar](quality-bar.md), [audit and review evidence](audit-v2.md).
 
-Changes must reuse canonical components and semantic roles. An intentional
-deviation requires a contract update in the same change, including responsive,
-accessibility and bundle evidence. Never add marketing headings, a website
-navbar, a separate icon vocabulary or component CSS to global styles.
+## Application UI integration
+
+Core owns wallpaper, desktop, SystemBar, Dock, utility layers and outer AppWindow.
+An application owns content. Trusted Custom Elements inherit --uc-* tokens into
+Shadow DOM; they never recreate shell chrome or import Core private source.
+Official apps use @usecloud/ui; domain UI stays in its owning app.
+
+No generic SaaS layouts, page-wide marketing headers, text-navbar docks,
+functional emoji, native color pickers or pretend controls. A title is not an
+action. Right-click always has a keyboard/touch-accessible alternative.
+UI work requires reviewed real-browser screenshots, not only passing tests.
