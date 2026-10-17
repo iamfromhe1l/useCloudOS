@@ -3,11 +3,10 @@
   min-width: 0;
   height: 100%;
   flex-direction: column;
-  padding: 1rem;
-  border: 1px solid var(--uc-outline-variant);
+  padding: 1.5rem;
+  border: 1px solid transparent;
   border-radius: var(--shape-extra-large);
-  background: var(--uc-surface-container);
-  box-shadow: var(--elevation-panel);
+  background: var(--uc-surface-container-low);
 }
 .header {
   display: flex;
@@ -60,12 +59,16 @@
 .server {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1.5rem;
+  min-height: 12rem;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
 }
 .serverIcon {
   display: grid;
-  width: 3rem;
-  height: 3rem;
+  width: 3.5rem;
+  height: 3.5rem;
   flex: none;
   place-items: center;
   border-radius: var(--shape-medium);
@@ -74,12 +77,13 @@
 }
 .serverText {
   min-width: 0;
+  width: 100%;
 }
 .serverText p {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font: var(--type-title-lg);
+  font: var(--type-heading);
 }
 .serverText small {
   font: var(--type-body-sm);
@@ -93,4 +97,17 @@
   color: var(--uc-primary);
   font: var(--type-label-lg);
   text-decoration: none;
+}
+.hero {
+  background: var(--uc-primary-container);
+  color: var(--uc-on-primary-container);
+  border-radius: 2rem 2rem 2rem 0.75rem;
+}
+.hero .serverText small {
+  color: inherit;
+  opacity: 0.85;
+}
+.hero .serverIcon {
+  color: var(--uc-on-primary);
+  background: var(--uc-primary);
 }

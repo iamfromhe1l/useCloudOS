@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom'
+
 import { useApplicationRegistry } from '@/entities/application'
 import { useNotifications } from '@/entities/notification'
 import { useFilesystems } from '@/entities/storage'
@@ -7,7 +9,8 @@ import { formatBytes, formatPercentage } from '@/shared/lib'
 import { Icon, InfoRow, QuickSettingTile, StatusChip } from '@/shared/ui'
 
 import styles from './ControlCenter.module.css'
-export function ControlCenterContent() {
+export function ControlCenterContent({ close = () => {} }: { close?: () => void }) {
+  const navigate = useNavigate()
   const system = useSystemInfo()
   const notifications = useNotifications()
   const registry = useApplicationRegistry()
@@ -44,21 +47,21 @@ export function ControlCenterContent() {
         <h2 className={styles.sectionTitle}>Quick controls</h2>
         <div className={styles.quick}>
           <QuickSettingTile
-            icon="deployedCode"
-            label="Applications"
-            detail={dockerDescription}
-            active={!!registry.data}
-            disabled
-          />
-          <QuickSettingTile
             icon="palette"
             label="Theme"
             detail={resolvedMode}
             active
             onClick={() => setMode(resolvedMode === 'dark' ? 'light' : 'dark')}
           />
-          <QuickSettingTile icon="networkWifi" label="Network" detail="Coming later" disabled />
-          <QuickSettingTile icon="backup" label="Backup" detail="Coming later" disabled />
+          <QuickSettingTile
+            icon="settings"
+            label="Settings"
+            detail="Personalize your cloud"
+            onClick={() => {
+              close()
+              navigate('/settings')
+            }}
+          />
         </div>
       </section>
       <section>

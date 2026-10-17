@@ -5,6 +5,7 @@ import { useTheme } from '@/shared/config/theme'
 import { PillButton, SettingsSection } from '@/shared/ui'
 import { Switch } from '@/shared/ui/selection'
 
+import { AppearancePreview } from './AppearancePreview'
 import { SettingRow } from './SettingRow'
 import styles from './Settings.module.css'
 export function AppearanceSettings() {
@@ -13,6 +14,7 @@ export function AppearanceSettings() {
   return (
     <div>
       <h2 className={styles.heading}>Appearance</h2>
+      <AppearancePreview />
       <SettingsSection title="Theme">
         <SettingRow
           title="Color mode"

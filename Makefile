@@ -170,7 +170,7 @@ app-files-pack:
 app-files-sign:
 	@./scripts/app-sign-dev files
 app-files-install-dev:
-	@limactl shell --workdir /workspace/usecloudos usecloud-dev -- sudo bash scripts/platform-admin-guest -X POST 'http://127.0.0.1:8080/api/v1/apps/install?confirm=1' --data-binary @artifacts/files-0.1.0.usecloud
+	@limactl shell --workdir /workspace/usecloudos usecloud-dev -- sudo bash scripts/platform-admin-guest -X POST 'http://127.0.0.1:8080/api/v1/apps/install?confirm=1' --data-binary @artifacts/files-0.2.0.usecloud
 
 .PHONY: files-check
 files-check:

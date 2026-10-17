@@ -1,15 +1,10 @@
 @import '@usecloud/theme/tailwind';
 :root {
-  --shape-small: 0.625rem;
-  --shape-medium: 1rem;
-  --shape-large: 1.5rem;
-  --shape-extra-large: 1.75rem;
-  --shape-pill: 999px;
-  --system-bar-height: 2.75rem;
-  --dock-height: 4.5rem;
+  --system-bar-height: 3rem;
+  --dock-height: 4.75rem;
   --dock-bottom: max(0.75rem, env(safe-area-inset-bottom));
-  --workspace-inline: 1.25rem;
-  --workspace-top-gap: 1rem;
+  --workspace-inline: 1.5rem;
+  --workspace-top-gap: 1.25rem;
   --workspace-bottom-gap: 1rem;
   --workspace-height: calc(
     100dvh - var(--system-bar-height) - var(--workspace-top-gap) - var(--dock-height) -

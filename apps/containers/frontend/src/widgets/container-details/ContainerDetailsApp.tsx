@@ -1,6 +1,6 @@
 import * as Tabs from '@radix-ui/react-tabs'
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 
 import { containerStatusTone, useContainer } from '@/entities/container'
 import { ContainerActions } from '@/features/container-lifecycle'
@@ -14,7 +14,10 @@ import { ContainerStatsView } from './ContainerStatsView'
 const tabs = ['Overview', 'Stats', 'Ports', 'Logs'] as const
 export function ContainerDetailsApp({ id }: { id: string }) {
   const query = useContainer(id)
-  const [tab, setTab] = useState('overview')
+  const { search } = useLocation()
+  const requestedTab = new URLSearchParams(search).get('tab') === 'logs' ? 'logs' : 'overview'
+  const [tab, setTab] = useState(requestedTab)
+  useEffect(() => setTab(requestedTab), [requestedTab])
   const container = query.data
   if (!container)
     return (

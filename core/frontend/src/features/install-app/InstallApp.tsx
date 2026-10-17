@@ -1,5 +1,5 @@
-import * as Dialog from '@radix-ui/react-dialog'
 import { type PackageMetadata, permissionMetadata } from '@usecloud/manifest'
+import { Dialog } from '@usecloud/ui/overlays'
 import { useRef, useState } from 'react'
 
 import {
@@ -8,7 +8,7 @@ import {
   useApplicationRegistry,
   useAppMutation,
 } from '@/entities/application'
-import { ErrorState, PillButton } from '@/shared/ui'
+import { ErrorState, PillButton, Spinner } from '@/shared/ui'
 export function InstallApp({ candidate }: { candidate?: PackageMetadata }) {
   const input = useRef<HTMLInputElement>(null)
   const [selected, setSelected] = useState<PackageMetadata | null>(null)
@@ -17,6 +17,12 @@ export function InstallApp({ candidate }: { candidate?: PackageMetadata }) {
   const [inspecting, setInspecting] = useState(false)
   const mutation = useAppMutation()
   const registry = useApplicationRegistry()
+  const installedCandidate = registry.data?.applications.find(
+    (app) => app.manifest.metadata.id === candidate?.manifest.metadata.id,
+  )
+  const sameVersion =
+    installedCandidate?.manifest.metadata.version === candidate?.manifest.metadata.version &&
+    !!candidate
   const previous = registry.data?.applications.find(
     (app) => app.manifest.metadata.id === selected?.manifest.metadata.id,
   )
@@ -44,7 +50,8 @@ export function InstallApp({ candidate }: { candidate?: PackageMetadata }) {
       : '/api/v1/catalog/' +
         selected.manifest.metadata.id +
         (updating ? '/update' : '/install') +
-        '?confirm=1'
+        '?confirm=1&digest=' +
+        encodeURIComponent(selected.digest)
     mutation.mutate(
       { path, method: 'POST', body: file ?? undefined },
       {
@@ -70,10 +77,21 @@ export function InstallApp({ candidate }: { candidate?: PackageMetadata }) {
         }}
       />
       <PillButton
-        disabled={inspecting}
+        disabled={inspecting || mutation.isPending || sameVersion}
         onClick={() => (candidate ? setSelected(candidate) : input.current?.click())}
       >
-        {candidate ? 'Install' : 'Install from .usecloud file'}
+        {(mutation.isPending || inspecting) && <Spinner />}
+        {mutation.isPending
+          ? 'Installing…'
+          : inspecting
+            ? 'Verifying…'
+            : candidate
+              ? sameVersion
+                ? 'Installed'
+                : installedCandidate
+                  ? 'Update'
+                  : 'Install'
+              : 'Install from .usecloud file'}
       </PillButton>
       {error && <ErrorState message={error} />}
       <Dialog.Root
@@ -131,9 +149,8 @@ export function InstallApp({ candidate }: { candidate?: PackageMetadata }) {
             {mutation.isError && <ErrorState message={mutation.error.message} />}
             <div className="flex flex-wrap gap-2">
               <PillButton onClick={install} disabled={mutation.isPending}>
-                {mutation.isPending
-                  ? 'Applying package...'
-                  : 'Confirm and grant requested permissions'}
+                {mutation.isPending && <Spinner />}
+                {mutation.isPending ? 'Installing…' : 'Confirm and grant requested permissions'}
               </PillButton>
               <Dialog.Close asChild>
                 <PillButton disabled={mutation.isPending} tone="quiet">

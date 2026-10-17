@@ -59,7 +59,7 @@ test('accent swatches, theme modes and keyboard dock', async ({ page }) => {
   ).toBeFocused()
   await page.keyboard.press('End')
   await expect(
-    page.locator('[data-dock]').getByRole('link', { name: 'Containers', exact: true }),
+    page.locator('[data-dock]').getByRole('button', { name: 'Application actions', exact: true }),
   ).toBeFocused()
 })
 

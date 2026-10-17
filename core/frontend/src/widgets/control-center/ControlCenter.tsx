@@ -1,4 +1,4 @@
-import * as Dialog from '@radix-ui/react-dialog'
+import { Dialog } from '@usecloud/ui/overlays'
 import { lazy, Suspense, useEffect, useState } from 'react'
 
 import { ControlCenterTrigger } from '@/features/control-center-toggle'
@@ -37,7 +37,7 @@ export function ControlCenter({ initialOpen = false }: { initialOpen?: boolean }
             </Dialog.Close>
           </header>
           <Suspense fallback={<p role="status">Loading controls…</p>}>
-            <ControlCenterContent />
+            <ControlCenterContent close={() => setOpen(false)} />
           </Suspense>
         </Dialog.Content>
       </Dialog.Portal>

@@ -66,7 +66,6 @@ function ContainerListItem({
   const name = container.name || container.id.slice(0, 12)
   const actions = (
     <div className={styles.actions}>
-      <ContainerActions id={container.id} name={name} state={container.state} />
       <Link
         to={'/containers/' + encodeURIComponent(container.id)}
         aria-label={'View details for ' + name}
@@ -76,5 +75,19 @@ function ContainerListItem({
       </Link>
     </div>
   )
-  return <ContainerItem container={container} actions={actions} />
+  return (
+    <ContainerActions id={container.id} name={name} state={container.state}>
+      {(controls) => (
+        <ContainerItem
+          container={container}
+          actions={
+            <>
+              {controls}
+              {actions}
+            </>
+          }
+        />
+      )}
+    </ContainerActions>
+  )
 }

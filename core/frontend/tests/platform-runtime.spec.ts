@@ -21,7 +21,7 @@ test('independent Containers installation, browser load and removal', async ({ p
     'Refusing to remove an existing app',
   ).toBe(false)
   const data = await readFile(
-    new URL('../../../artifacts/containers-0.1.0.usecloud', import.meta.url),
+    new URL('../../../artifacts/containers-0.2.0.usecloud', import.meta.url),
   )
   let installed = false
   try {
@@ -38,7 +38,7 @@ test('independent Containers installation, browser load and removal', async ({ p
       .getByRole('navigation', { name: 'Desktop applications' })
       .getByText('Containers')
       .click()
-    await expect(page.locator('usecloud-containers-v0-1-0')).toBeVisible()
+    await expect(page.locator('usecloud-containers-v0-2-0')).toBeVisible()
     await expect(page.getByText(/services on Docker Engine/)).toBeVisible()
     const body = await (await request.get(api + '/api/apps/containers/docker/info')).json()
     expect(body.available).toBe(true)

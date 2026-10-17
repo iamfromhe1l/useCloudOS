@@ -7,7 +7,7 @@ export function SystemBarSection({ children }: PropsWithChildren) {
   return <div className={styles.section}>{children}</div>
 }
 export function SystemBarItem({ children }: PropsWithChildren) {
-  return <div className={styles.item}>{children}</div>
+  return <span className={styles.item}>{children}</span>
 }
 export function SystemMetric({
   icon,

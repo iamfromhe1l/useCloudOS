@@ -14,17 +14,25 @@
 }
 .titlebar {
   display: flex;
-  min-height: 4.25rem;
+  min-height: 3.75rem;
   flex: none;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem 0.5rem 1rem;
   border-bottom: 1px solid var(--uc-outline-variant);
   background: var(--uc-surface-container);
 }
 .identity {
   min-width: 0;
   flex: 1;
+}
+.titlebar > span {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--shape-small);
+}
+.titlebar h1 {
+  cursor: default;
 }
 .identity h1 {
   letter-spacing: var(--type-tracking-title);

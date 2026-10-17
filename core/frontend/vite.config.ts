@@ -29,6 +29,9 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 550,
     },
     server: {
+      watch: {
+        ignored: ['**/playwright-report/**', '**/test-results/**', '**/storybook-static/**'],
+      },
       host: 'localhost',
       port: 5173,
       strictPort: true,

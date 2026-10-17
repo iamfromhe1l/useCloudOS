@@ -4,8 +4,8 @@ import { registerReactApplication } from '@usecloud/app-sdk/react'
 
 import { FilesApplication } from '@/app/FilesApplication'
 registerReactApplication({
-  element: 'usecloud-files-v0-1-0',
+  element: 'usecloud-files-v0-2-0',
   Application: FilesApplication,
   styles:
-    ':host{display:block;min-width:0;color:var(--uc-on-surface);font-family:inherit}*,*::before,*::after{box-sizing:border-box}',
+    ':host{display:block;height:100%;min-width:0;color:var(--uc-on-surface);font-family:inherit}.usecloud-app-root{height:100%;min-height:0}*,*::before,*::after{box-sizing:border-box}',
 })

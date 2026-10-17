@@ -53,6 +53,13 @@ export function AppHost({
         if (app?.route) navigate(app.route)
       },
       setRoute: (path: string) => {
+        const prefix = '/apps/' + m.metadata.id
+        // A retained/lazy old view must not pull the shell back after navigation.
+        if (
+          window.location.pathname !== prefix &&
+          !window.location.pathname.startsWith(prefix + '/')
+        )
+          return
         if (path.startsWith('/') && !path.startsWith('//') && !path.includes('..'))
           navigate('/apps/' + m.metadata.id + (path === '/' ? '' : path))
       },
@@ -175,7 +182,7 @@ export function AppHost({
       />
     )
   return (
-    <div className="min-w-0">
+    <div className="h-full min-h-0 min-w-0">
       {loading && <LoadingState message="Loading application..." />}
       {failure && (
         <ErrorState
@@ -183,7 +190,12 @@ export function AppHost({
           action={<RetryAction onRetry={() => setAttempt((value) => value + 1)} />}
         />
       )}
-      <div ref={mount} hidden={failure} data-app-host={m.metadata.id} />
+      <div
+        ref={mount}
+        className="h-full min-h-0 min-w-0"
+        hidden={failure}
+        data-app-host={m.metadata.id}
+      />
     </div>
   )
 }

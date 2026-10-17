@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 
-import { formatTimestamp } from '@/shared/lib'
 import { Icon, OverflowText, StatusChip } from '@/shared/ui'
 
 import styles from './ContainerItem.module.css'
@@ -29,9 +28,7 @@ export function ContainerItem({
         <p className={styles.image}>
           <OverflowText text={container.image} />
         </p>
-        <p className={styles.meta}>
-          {container.status} · Created {formatTimestamp(container.created_at)}
-        </p>
+        <p className={styles.meta}>{container.status}</p>
       </div>
       <div className={styles.actions}>{actions}</div>
     </article>

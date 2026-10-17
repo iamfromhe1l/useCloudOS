@@ -44,8 +44,8 @@
     "react-dom": "^19.3.0",
     "react-router-dom": "^7.18.4",
     "tailwind-merge": "^3.7.0",
-    "@usecloud/ui": "0.1.0",
-    "@usecloud/theme": "0.1.0",
+    "@usecloud/ui": "0.2.0",
+    "@usecloud/theme": "0.2.0",
     "@usecloud/app-sdk": "0.1.0",
     "@usecloud/manifest": "0.2.0"
   },

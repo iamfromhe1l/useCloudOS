@@ -1,6 +1,6 @@
-import * as Dialog from '@radix-ui/react-dialog'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ErrorState, PillButton } from '@usecloud/ui'
+import { Dialog } from '@usecloud/ui/overlays'
 import { useState } from 'react'
 
 import { fileKeys } from '@/entities/file-entry'
@@ -39,7 +39,10 @@ export function CreateFolder({
       </Dialog.Trigger>
       <Dialog.Portal container={portal}>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-scrim/60" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[min(90vw,440px)] -translate-x-1/2 -translate-y-1/2 space-y-4 rounded-shape-large bg-surface-container-high p-5 text-on-surface">
+        <Dialog.Content
+          aria-modal="true"
+          className="fixed top-1/2 left-1/2 z-50 w-[min(90vw,440px)] -translate-x-1/2 -translate-y-1/2 space-y-4 rounded-shape-large bg-surface-container-high p-5 text-on-surface"
+        >
           <Dialog.Title className="text-title-large">Create folder</Dialog.Title>
           <Dialog.Description>
             Folder names cannot contain slashes. Existing entries are never overwritten.

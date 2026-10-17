@@ -3,7 +3,7 @@ kind: App
 metadata:
   id: containers
   name: Containers
-  version: 0.1.0
+  version: 0.2.0
   description: Manage existing Docker containers on this server
   author: useCloudOS
 platform:
@@ -14,7 +14,7 @@ runtime:
 frontend:
   type: web-component
   entry: frontend/index.js
-  element: usecloud-containers-v0-1-0
+  element: usecloud-containers-v0-2-0
   styles: [frontend/style.css]
 backend:
   type: native

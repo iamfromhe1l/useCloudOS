@@ -5,7 +5,13 @@ import { AppIcon, type Application } from '@/entities/application'
 import { cn, Tooltip } from '@/shared/ui'
 
 import styles from './Dock.module.css'
-export function DockItem({ application }: { application: Application }) {
+export function DockItem({
+  application,
+  openActions,
+}: {
+  application: Application
+  openActions: (app: Application) => void
+}) {
   const { pathname } = useLocation()
   const active =
     application.route === '/'
@@ -17,7 +23,11 @@ export function DockItem({ application }: { application: Application }) {
     <>
       <AppIcon application={application} />
       <span className={styles.label}>{application.name}</span>
-      <span className={styles.indicator} aria-hidden="true" />
+      <span
+        className={styles.indicator}
+        data-running={application.installed?.status === 'running'}
+        aria-hidden="true"
+      />
     </>
   )
   const className = cn(styles.item, active && styles.active, unavailable && styles.unavailable)
@@ -30,6 +40,10 @@ export function DockItem({ application }: { application: Application }) {
             end={application.id === 'home'}
             aria-label={application.name}
             className={className}
+            onContextMenu={(event) => {
+              event.preventDefault()
+              openActions(application)
+            }}
           >
             {content}
           </NavLink>

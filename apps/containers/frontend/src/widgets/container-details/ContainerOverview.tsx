@@ -13,14 +13,23 @@ export function ContainerOverview({ container }: { container: ContainerDetails }
           <p>{container.id}</p>
         </div>
       </div>
-      <TonalSurface>
-        <dl>
-          <InfoRow label="Image" value={container.image} mono />
-          <InfoRow label="Created" value={formatTimestamp(container.created_at)} />
-          <InfoRow label="Started" value={formatTimestamp(container.started_at)} />
-          <InfoRow label="Restart count" value={container.restart_count} />
-        </dl>
-      </TonalSurface>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <TonalSurface>
+          <h3 className="mb-3 text-title-medium font-semibold">Identity</h3>
+          <dl>
+            <InfoRow label="Image" value={container.image} mono />
+            <InfoRow label="State" value={container.state} />
+          </dl>
+        </TonalSurface>
+        <TonalSurface>
+          <h3 className="mb-3 text-title-medium font-semibold">Lifecycle</h3>
+          <dl>
+            <InfoRow label="Created" value={formatTimestamp(container.created_at)} />
+            <InfoRow label="Started" value={formatTimestamp(container.started_at)} />
+            <InfoRow label="Restart count" value={container.restart_count} />
+          </dl>
+        </TonalSurface>
+      </div>
     </section>
   )
 }

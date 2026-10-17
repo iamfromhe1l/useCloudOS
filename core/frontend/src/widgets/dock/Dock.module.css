@@ -14,8 +14,8 @@
   display: flex;
   height: 100%;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.45rem 0.6rem;
+  gap: 0.45rem;
+  padding: 0.5rem 0.65rem;
   border: 1px solid var(--uc-outline-variant);
   border-radius: var(--shape-extra-large);
   background: color-mix(in srgb, var(--uc-surface-container) 94%, transparent);
@@ -45,10 +45,19 @@
 }
 .item:hover {
   background: var(--uc-surface-container-highest);
+  transform: translateY(-3px);
+}
+.item {
+  transition:
+    transform var(--motion-fast),
+    background-color var(--motion-fast);
+}
+.item:active {
+  transform: scale(0.94);
 }
 .active {
-  border-color: var(--uc-primary);
-  background: var(--uc-primary-container);
+  background: var(--uc-secondary-container);
+  color: var(--uc-on-secondary-container);
 }
 .indicator {
   position: absolute;
@@ -64,6 +73,23 @@
 .label {
   display: none;
   font: var(--type-caption);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.indicator[data-running='true'] {
+  background: var(--uc-on-surface-variant);
+}
+.active .indicator {
+  width: 0.8rem;
+  background: var(--uc-on-secondary-container);
+}
+@media (prefers-reduced-motion: reduce) {
+  .item:hover,
+  .item:active {
+    transform: none;
+  }
 }
 .unavailable {
   border-style: dashed;

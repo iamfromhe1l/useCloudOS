@@ -256,7 +256,7 @@ func (h HTTP) asset(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filepath.Join(app.InstallPath, filepath.FromSlash(asset)))
 }
 func (h HTTP) catalog(w http.ResponseWriter, r *http.Request) {
-	result := []any{}
+	result := []*apppackage.Package{}
 	entries, _ := os.ReadDir(h.CatalogRoot)
 	for _, entry := range entries {
 		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".usecloud") {
@@ -278,7 +278,7 @@ func (h HTTP) catalog(w http.ResponseWriter, r *http.Request) {
 			result = append(result, p)
 		}
 	}
-	JSON(w, 200, map[string]any{"applications": result, "source": "local"})
+	JSON(w, 200, map[string]any{"applications": latestCatalogPackages(result), "source": "local"})
 }
 func (h HTTP) catalogInstall(w http.ResponseWriter, r *http.Request) {
 	_ = http.NewResponseController(w).SetWriteDeadline(time.Now().Add(4 * time.Minute))
@@ -307,7 +307,7 @@ func (h HTTP) catalogInstall(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			err = h.Database.ResolveTrust(r.Context(), p)
 		}
-		if err == nil && p.Manifest.Metadata.ID == id {
+		if err == nil && catalogMatches(p, id, r.URL.Query().Get("digest")) {
 			if strings.HasSuffix(r.URL.Path, "/update") {
 				if err = h.Manager.Update(r.Context(), p, r.URL.Query().Get("confirm") == "1"); err != nil {
 					gateway.Error(w, 409, "UPDATE_FAILED", "Application update failed or was rolled back")

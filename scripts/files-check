@@ -22,8 +22,8 @@ cleanup(){
  rmdir "$temporary"
 }
 trap cleanup EXIT
-"${request[@]}" -X POST "$api/api/v1/apps/inspect" --data-binary @artifacts/files-0.1.0.usecloud | jq -e '.trust=="verified"' >/dev/null
-"${request[@]}" -X POST "$api/api/v1/apps/install?confirm=1" --data-binary @artifacts/files-0.1.0.usecloud | jq -e '.status=="running"' >/dev/null
+"${request[@]}" -X POST "$api/api/v1/apps/inspect" --data-binary @artifacts/files-0.2.0.usecloud | jq -e '.trust=="verified"' >/dev/null
+"${request[@]}" -X POST "$api/api/v1/apps/install?confirm=1" --data-binary @artifacts/files-0.2.0.usecloud | jq -e '.status=="running"' >/dev/null
 installed=1
 systemctl show usecloud-app-files.service -p User --value | grep -qx usecloud-app-files
 "${request[@]}" -X POST -H 'Content-Type: application/json' "$api/api/apps/files/directories" --data "{\"path\":\"$directory\"}"

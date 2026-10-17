@@ -1,86 +1,109 @@
+import {
+  ContextMenu,
+  ContextMenuContent,
+  DropdownMenu,
+  MenuContent,
+  menuItemClass,
+  menuSeparatorClass,
+} from '@usecloud/ui/overlays'
+import { type ReactElement, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
+
 import type { ContainerAction } from '@/entities/container'
-import { ApiError } from '@/shared/api'
-import { Icon, type IconName, PillButton } from '@/shared/ui'
+import { Icon, PillButton, Spinner } from '@/shared/ui'
 
 import { useContainerAction } from './useContainerAction'
-
-interface ContainerActionsProps {
+interface Props {
   id: string
   name: string
   state: string
+  children?: (controls: ReactNode) => ReactElement
 }
-
-const labels: Record<ContainerAction, { idle: string; pending: string }> = {
-  start: { idle: 'Start', pending: 'Starting...' },
-  stop: { idle: 'Stop', pending: 'Stopping...' },
-  restart: { idle: 'Restart', pending: 'Restarting...' },
-}
-
-const icons: Record<ContainerAction, IconName> = {
-  start: 'playArrow',
-  stop: 'stop',
-  restart: 'restartAlt',
-}
-
-export function ContainerActions({ id, name, state }: ContainerActionsProps) {
+export function ContainerActions({ id, name, state, children }: Props) {
   const mutation = useContainerAction(id)
-  const pendingAction = mutation.isPending ? mutation.variables : undefined
-
+  const navigate = useNavigate()
+  const running = state === 'running'
+  const primary = running ? 'stop' : 'start'
   const run = (action: ContainerAction) => mutation.mutate(action)
-  const actionLabel = (action: ContainerAction) =>
-    pendingAction === action ? labels[action].pending : labels[action].idle
-
-  return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap gap-2" role="group" aria-label={`Actions for ${name}`}>
-        {state === 'running' ? (
-          <>
+  const view = (segment = '') => navigate('/containers/' + encodeURIComponent(id) + segment)
+  const items = (context: boolean) => {
+    const Menu = context ? ContextMenu : DropdownMenu
+    return (
+      <>
+        <Menu.Label className="max-w-64 truncate px-3 py-2 text-label-medium text-on-surface-variant">
+          {name}
+        </Menu.Label>
+        <Menu.Item className={menuItemClass} onSelect={() => view()}>
+          Open details
+        </Menu.Item>
+        <Menu.Item className={menuItemClass} onSelect={() => view('?tab=logs')}>
+          Logs
+        </Menu.Item>
+        <Menu.Separator className={menuSeparatorClass} />
+        <Menu.Item
+          className={menuItemClass}
+          disabled={mutation.isPending}
+          onSelect={() => run('restart')}
+        >
+          Restart
+        </Menu.Item>
+        <Menu.Item
+          className={menuItemClass + (running ? ' text-error' : '')}
+          disabled={mutation.isPending}
+          onSelect={() => run(primary)}
+        >
+          {running ? 'Stop' : 'Start'}
+        </Menu.Item>
+      </>
+    )
+  }
+  const controls = (
+    <div className="space-y-1">
+      <div className="flex gap-2" role="group" aria-label={'Actions for ' + name}>
+        <PillButton
+          tone={running ? 'quiet' : 'primary'}
+          aria-label={(running ? 'Stop ' : 'Start ') + name}
+          disabled={mutation.isPending}
+          aria-busy={mutation.isPending}
+          onClick={() => run(primary)}
+          icon={
+            mutation.isPending ? (
+              <Spinner />
+            ) : (
+              <Icon name={running ? 'stop' : 'playArrow'} className="size-4" />
+            )
+          }
+        >
+          {mutation.isPending ? 'Applying…' : running ? 'Stop' : 'Start'}
+        </PillButton>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
             <PillButton
-              type="button"
-              tone="danger"
-              aria-label={`Stop ${name}`}
-              aria-busy={pendingAction === 'stop'}
+              iconOnly
+              tone="quiet"
               disabled={mutation.isPending}
-              onClick={() => run('stop')}
-              icon={<Icon name={icons.stop} className="size-4" />}
+              aria-label={'More actions for ' + name}
             >
-              {actionLabel('stop')}
+              <Icon name="moreHoriz" className="size-5" />
             </PillButton>
-            <PillButton
-              type="button"
-              aria-label={`Restart ${name}`}
-              aria-busy={pendingAction === 'restart'}
-              disabled={mutation.isPending}
-              onClick={() => run('restart')}
-              icon={<Icon name={icons.restart} className="size-4" />}
-            >
-              {actionLabel('restart')}
-            </PillButton>
-          </>
-        ) : (
-          <PillButton
-            type="button"
-            tone="primary"
-            aria-label={`Start ${name}`}
-            aria-busy={pendingAction === 'start'}
-            disabled={mutation.isPending}
-            onClick={() => run('start')}
-            icon={<Icon name={icons.start} className="size-4" />}
-          >
-            {actionLabel('start')}
-          </PillButton>
-        )}
+          </DropdownMenu.Trigger>
+          <MenuContent align="end">{items(false)}</MenuContent>
+        </DropdownMenu.Root>
       </div>
-      {mutation.isError ? (
+      {mutation.isError && (
         <p role="alert" className="text-body-small text-error">
-          {mutation.error instanceof ApiError ? mutation.error.message : 'Container action failed.'}
+          {mutation.error.message}
         </p>
-      ) : null}
-      {mutation.isPending ? (
-        <p role="status" className="sr-only">
-          {actionLabel(pendingAction!)}
-        </p>
-      ) : null}
+      )}
     </div>
+  )
+  if (!children) return controls
+  return (
+    <ContextMenu.Root>
+      <ContextMenu.Trigger asChild>
+        <div>{children(controls)}</div>
+      </ContextMenu.Trigger>
+      <ContextMenuContent>{items(true)}</ContextMenuContent>
+    </ContextMenu.Root>
   )
 }

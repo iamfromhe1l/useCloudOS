@@ -20,14 +20,12 @@ test('signed Files install, real login and filesystem UI lifecycle', async ({ pa
     ),
     'Refusing to remove a pre-existing app',
   ).toBe(false)
-  const data = await readFile(new URL('../../../artifacts/files-0.1.0.usecloud', import.meta.url))
+  const data = await readFile(new URL('../../../artifacts/files-0.2.0.usecloud', import.meta.url))
   const folder = 'browser-proof-' + Date.now()
   let installed = false
   try {
     await page.goto('/store')
-    const card = page
-      .locator('section')
-      .filter({ has: page.getByRole('heading', { name: 'Files', exact: true }) })
+    const card = page.locator('[data-catalog-app="files"]').last()
     await expect(card.getByText(/Verified publisher/)).toBeVisible()
     const inspect = await request.post(api + '/api/v1/apps/inspect', { data })
     expect((await inspect.json()).trust).toBe('verified')
@@ -36,7 +34,7 @@ test('signed Files install, real login and filesystem UI lifecycle', async ({ pa
     await expect(page.getByRole('dialog')).toHaveCount(0)
     installed = true
     await page.goto('/apps/files')
-    await expect(page.locator('usecloud-files-v0-1-0')).toBeVisible()
+    await expect(page.locator('usecloud-files-v0-2-0')).toBeVisible()
     await page.getByRole('button', { name: 'New folder' }).click()
     await page.getByLabel('Folder name').fill(folder)
     await page.getByRole('button', { name: 'Create', exact: true }).click()

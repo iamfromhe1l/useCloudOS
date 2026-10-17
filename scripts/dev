@@ -18,7 +18,7 @@ set -Eeuo pipefail
 app="$1"
 request=(bash scripts/platform-admin-guest)
 if ! "${request[@]}" http://127.0.0.1:8080/api/v1/apps | jq -e --arg id "$app" '.applications | any(.manifest.metadata.id == $id)' >/dev/null; then
-  "${request[@]}" -X POST 'http://127.0.0.1:8080/api/v1/apps/install?confirm=1' --data-binary "@artifacts/$app-0.1.0.usecloud" >/dev/null
+  "${request[@]}" -X POST 'http://127.0.0.1:8080/api/v1/apps/install?confirm=1' --data-binary "@artifacts/$app-0.2.0.usecloud" >/dev/null
 fi
 "${request[@]}" -X POST "http://127.0.0.1:8080/api/v1/apps/$app/start"
 GUEST

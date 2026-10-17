@@ -11,7 +11,7 @@ export function ServerWidget() {
     ? 'Online · ' + formatDuration(query.data.uptime_seconds) + ' uptime'
     : 'Connecting to your cloud…'
   return (
-    <DesktopWidget>
+    <DesktopWidget className={styles.hero}>
       <div className={styles.server}>
         <span className={styles.serverIcon}>
           <Icon name="cloud" className="size-7" />

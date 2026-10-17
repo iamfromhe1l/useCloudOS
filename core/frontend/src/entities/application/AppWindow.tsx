@@ -1,6 +1,7 @@
 import type { PropsWithChildren, ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 
-import { cn, OverflowText } from '@/shared/ui'
+import { cn, Icon, IconButton, OverflowText, Tooltip } from '@/shared/ui'
 
 import { AppIcon } from './AppIcon'
 import styles from './AppWindow.module.css'
@@ -21,6 +22,7 @@ export function WindowTitleBar({
   actions,
 }: Omit<Props, 'children' | 'className'>) {
   const app = useApplication(appId)
+  const navigate = useNavigate()
   const windowTitle = title ?? app?.name ?? appId
   return (
     <header className={styles.titlebar}>
@@ -37,6 +39,13 @@ export function WindowTitleBar({
         )}
       </div>
       {actions && <div className={styles.actions}>{actions}</div>}
+      <Tooltip label="Close application · Home">
+        <IconButton
+          label={'Close ' + windowTitle}
+          onClick={() => navigate('/')}
+          icon={<Icon name="close" className="size-5" />}
+        />
+      </Tooltip>
     </header>
   )
 }

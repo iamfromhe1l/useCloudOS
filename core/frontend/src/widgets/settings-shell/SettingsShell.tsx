@@ -1,6 +1,6 @@
 import * as Tabs from '@radix-ui/react-tabs'
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 
 import { AppWindow } from '@/entities/application'
 import { useMediaQuery } from '@/shared/lib'
@@ -19,15 +19,15 @@ const destinations: { id: string; label: string; icon: IconName }[] = [
 ]
 export function SettingsShell({ sections }: { sections: Record<string, ReactNode> }) {
   const compact = useMediaQuery('(max-width:599px)')
-  const back = (
-    <Link to="/" aria-label="Close settings and return Home" className={styles.back}>
-      <Icon name="arrowBack" className="size-5" />
-    </Link>
-  )
+  const [params, setParams] = useSearchParams()
+  const selected = destinations.some((item) => item.id === params.get('section'))
+    ? params.get('section')!
+    : 'appearance'
   return (
-    <AppWindow appId="settings" leading={back}>
+    <AppWindow appId="settings">
       <Tabs.Root
-        defaultValue="appearance"
+        value={selected}
+        onValueChange={(section) => setParams({ section })}
         className={styles.layout}
         orientation={compact ? 'horizontal' : 'vertical'}
       >

@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useAppContext } from '@usecloud/app-sdk/react'
-import { ErrorState, PillButton } from '@usecloud/ui'
+import { ErrorState, Icon, PillButton, Progress } from '@usecloud/ui'
 import { useEffect, useRef, useState } from 'react'
 
 import { fileKeys } from '@/entities/file-entry'
@@ -59,7 +59,12 @@ export function UploadFile({
           e.target.value = ''
         }}
       />
-      <PillButton disabled={disabled || !!state} onClick={() => input.current?.click()}>
+      <PillButton
+        tone="primary"
+        icon={<Icon name="upload" className="size-5" />}
+        disabled={disabled || !!state}
+        onClick={() => input.current?.click()}
+      >
         Upload file
       </PillButton>
       {state && (
@@ -67,12 +72,7 @@ export function UploadFile({
           <p className="truncate text-body-small" title={state.name}>
             {state.name} · {state.percent}%
           </p>
-          <progress
-            aria-label={'Uploading ' + state.name}
-            value={state.percent}
-            max={100}
-            className="w-full accent-primary"
-          />
+          <Progress label={'Uploading ' + state.name} value={state.percent} />
           <PillButton tone="quiet" onClick={() => active.current?.cancel()}>
             Cancel upload
           </PillButton>

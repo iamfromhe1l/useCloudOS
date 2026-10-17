@@ -1,13 +1,14 @@
-import { useParams } from 'react-router-dom'
+import { useLocation, useParams } from 'react-router-dom'
 
 import { AppWindow, useApplication, useApplicationRegistry } from '@/entities/application'
 import { ErrorState, LoadingState } from '@/shared/ui'
 import { AppHost, AppHostErrorBoundary } from '@/widgets/app-host'
 export function ApplicationPage() {
   const params = useParams()
+  const { search } = useLocation()
   const registry = useApplicationRegistry()
   const app = useApplication(params.appId ?? '')
-  const route = params['*'] ? '/' + params['*'] : '/'
+  const route = (params['*'] ? '/' + params['*'] : '/') + search
   if (registry.isPending) return <LoadingState />
   if (!app?.installed)
     return (

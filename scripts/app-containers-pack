@@ -10,8 +10,8 @@ mkdir -p "$staging/frontend" "$staging/backend" artifacts
 cp apps/containers/manifest/manifest.yaml "$staging/manifest.yaml"
 cp -R apps/containers/frontend/dist/. "$staging/frontend/"
 cp apps/containers/backend/bin/containers-service "$staging/backend/containers-service"
-/usr/local/go/bin/go run ./core/backend/cmd/usecloud app pack "$staging" artifacts/containers-0.1.0.usecloud
+/usr/local/go/bin/go run ./core/backend/cmd/usecloud app pack "$staging" artifacts/containers-0.2.0.usecloud
 sudo install -d -m 0750 /data/platform/catalog
-sudo install -m 0644 artifacts/containers-0.1.0.usecloud /data/platform/catalog/containers-0.1.0.usecloud
+sudo install -m 0644 artifacts/containers-0.2.0.usecloud /data/platform/catalog/containers-0.2.0.usecloud
 '
 "${SCRIPT_DIR}/app-sign-dev" containers

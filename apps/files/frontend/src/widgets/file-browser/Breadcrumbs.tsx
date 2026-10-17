@@ -1,4 +1,4 @@
-import { PillButton } from '@usecloud/ui'
+import { Icon } from '@usecloud/ui'
 export function Breadcrumbs({
   path,
   navigate,
@@ -8,20 +8,29 @@ export function Breadcrumbs({
 }) {
   const segments = path.split('/').filter(Boolean)
   return (
-    <nav aria-label="Storage path" className="flex min-w-0 gap-1 overflow-x-auto whitespace-nowrap">
-      <PillButton tone="quiet" onClick={() => navigate('')}>
+    <nav
+      aria-label="Storage path"
+      className="flex min-w-0 items-center gap-1 overflow-x-auto text-label-large whitespace-nowrap"
+    >
+      <button
+        onClick={() => navigate('')}
+        className="flex min-h-11 shrink-0 items-center gap-2 rounded-shape-small px-3 hover:bg-secondary-container"
+      >
+        <Icon name="folder" className="size-5" />
         Shared storage
-      </PillButton>
+      </button>
       {segments.map((segment, index) => (
-        <PillButton
-          key={index}
-          tone="quiet"
-          onClick={() => navigate(segments.slice(0, index + 1).join('/'))}
-        >
-          <span className="max-w-48 truncate" title={segment}>
+        <span key={index} className="flex shrink-0 items-center">
+          <Icon name="chevronRight" className="size-4 text-on-surface-variant" />
+          <button
+            aria-current={index === segments.length - 1 ? 'location' : undefined}
+            onClick={() => navigate(segments.slice(0, index + 1).join('/'))}
+            className="min-h-11 max-w-48 truncate rounded-shape-small px-3 hover:bg-secondary-container aria-[current=location]:text-primary"
+            title={segment}
+          >
             {segment}
-          </span>
-        </PillButton>
+          </button>
+        </span>
       ))}
     </nav>
   )

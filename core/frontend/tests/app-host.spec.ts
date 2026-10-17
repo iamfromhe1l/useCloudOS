@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 import { assertShellGeometry, preparePage } from './helpers'
 test.beforeEach(async ({ page }, info) => preparePage(page, info.title))
 test('failed application module leaves shell usable', async ({ page }) => {
-  await page.route('**/app-assets/containers/0.1.0/frontend/index.js*', (route) =>
+  await page.route('**/app-assets/containers/0.2.0/frontend/index.js*', (route) =>
     route.fulfill({ status: 503, body: 'unavailable' }),
   )
   await page.goto('/apps/containers')
@@ -17,7 +17,7 @@ test('app CSS remains inside Shadow DOM and inherits shell theme', async ({ page
   await expect(page.getByText('example-container', { exact: true })).toBeVisible()
   const launcher = page.getByRole('link', { name: 'Open Home' })
   const before = await launcher.evaluate((element) => getComputedStyle(element).fontSize)
-  const values = await page.locator('usecloud-containers-v0-1-0').evaluate((element) => {
+  const values = await page.locator('usecloud-containers-v0-2-0').evaluate((element) => {
     const style = document.createElement('style')
     style.textContent = 'button {font-size:99px!important} body {display:none!important}'
     element.shadowRoot?.append(style)

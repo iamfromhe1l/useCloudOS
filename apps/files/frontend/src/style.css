@@ -1,4 +1,4 @@
+@import '@usecloud/ui/css';
 @import 'tailwindcss';
 @import '@usecloud/theme/tailwind';
 @import '@usecloud/theme/typography';
-@import '@usecloud/ui/css';

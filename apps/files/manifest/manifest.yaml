@@ -3,7 +3,7 @@ kind: App
 metadata:
   id: files
   name: Files
-  version: 0.1.0
+  version: 0.2.0
   description: Browse and manage your shared storage
   author: useCloudOS
 platform: { minVersion: 0.1.0, hostVersion: 1 }
@@ -11,7 +11,7 @@ runtime: { type: native }
 frontend:
   type: web-component
   entry: frontend/index.js
-  element: usecloud-files-v0-1-0
+  element: usecloud-files-v0-2-0
   styles: [frontend/style.css]
 backend:
   type: native

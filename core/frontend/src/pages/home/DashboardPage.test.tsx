@@ -60,7 +60,7 @@ describe('DashboardPage', () => {
     expect((await screen.findAllByText('usecloud-dev')).length).toBeGreaterThan(0)
     expect(screen.getByText('Debian GNU/Linux 13')).toBeInTheDocument()
     expect(screen.getByText('12.4%')).toBeInTheDocument()
-    expect(screen.getByText('0 installed applications')).toBeInTheDocument()
+    expect(screen.getByText('ready to open · 0 installed')).toBeInTheDocument()
   })
 
   it('keeps system data visible when registry is unavailable', async () => {

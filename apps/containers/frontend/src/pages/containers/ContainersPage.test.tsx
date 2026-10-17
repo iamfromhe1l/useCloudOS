@@ -49,7 +49,7 @@ describe('ContainersPage', () => {
     const stopButton = await screen.findByRole('button', { name: 'Stop jellyfin' })
     await user.click(stopButton)
     expect(await screen.findByRole('button', { name: 'Stop jellyfin' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Restart jellyfin' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'More actions for jellyfin' })).toBeDisabled()
 
     finishMutation?.()
     await waitFor(() =>

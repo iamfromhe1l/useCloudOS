@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 
 import { AppIcon, type Application, useApplications } from '@/entities/application'
+import { ApplicationMenu } from '@/features/application-menu'
 import { Tooltip } from '@/shared/ui'
 
 import styles from './Desktop.module.css'
@@ -43,17 +44,19 @@ export function DesktopAppIcon({ application }: { application: Application }) {
   )
   const label = application.name + (application.availability === 'soon' ? ' · coming later' : '')
   return (
-    <Tooltip label={label}>
-      {application.route ? (
-        <Link to={application.route} className={styles.launcher}>
-          {content}
-        </Link>
-      ) : (
-        <button type="button" aria-disabled="true" className={styles.launcher}>
-          {content}
-        </button>
-      )}
-    </Tooltip>
+    <ApplicationMenu application={application}>
+      <Tooltip label={label}>
+        {application.route ? (
+          <Link to={application.route} className={styles.launcher}>
+            {content}
+          </Link>
+        ) : (
+          <button type="button" aria-disabled="true" className={styles.launcher}>
+            {content}
+          </button>
+        )}
+      </Tooltip>
+    </ApplicationMenu>
   )
 }
 export function Desktop({ children }: React.PropsWithChildren) {

@@ -8,7 +8,7 @@ set -Eeuo pipefail
 api=http://127.0.0.1:8080
 bash scripts/platform-admin-guest "$api/api/v1/session" >/dev/null
 curl(){ command curl -b /data/platform/config/admin-session.cookies "$@"; }
-package=/workspace/usecloudos/artifacts/containers-0.1.0.usecloud
+package=/workspace/usecloudos/artifacts/containers-0.2.0.usecloud
 curl -fsS "$api/api/v1/health" | jq -e '.status == "ok"' >/dev/null
 if curl -fsS "$api/api/v1/apps" | jq -e '.applications | any(.manifest.metadata.id == "containers")' >/dev/null; then
   echo 'Containers is already installed. Refusing to uninstall an existing app. Remove it explicitly before this fresh-install check.' >&2
@@ -26,7 +26,7 @@ response="$(curl -fsS -X POST "$api/api/v1/apps/install?confirm=1" --data-binary
 installed=1
 printf '%s' "$response" | jq -e '.status == "running"' >/dev/null
 curl -fsS "$api/api/v1/apps" | jq -e '.applications | any(.manifest.metadata.id == "containers")' >/dev/null
-curl -fsS "$api/app-assets/containers/0.1.0/frontend/index.js" >/dev/null
+curl -fsS "$api/app-assets/containers/0.2.0/frontend/index.js" >/dev/null
 curl -fsS "$api/api/apps/containers/docker/info" | jq -e '.available' >/dev/null
 CLOUD_CORE_URL="$api" bash /workspace/usecloudos/scripts/docker-smoke-guest
 curl -fsS -X POST "$api/api/v1/apps/containers/stop" >/dev/null

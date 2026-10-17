@@ -12,7 +12,7 @@ export const container = {
 }
 
 export async function mockBackend(page: Page) {
-  await page.route('**/app-assets/containers/0.1.0/**', async (route) => {
+  await page.route('**/app-assets/containers/0.2.0/**', async (route) => {
     const relative = new URL(route.request().url()).pathname.split('/frontend/')[1]
     if (!relative || relative.includes('..')) return route.abort()
     const body = await readFile(

@@ -2,7 +2,7 @@
 
 Second independently installable useCloudOS application. Core owns the outer
 AppWindow; Files owns listing, paths and file operations. React/Tailwind frontend
-registers usecloud-files-v0-1-0, uses only public UI/theme/SDK/manifest packages,
+registers usecloud-files-v0-2-0, uses only public UI/theme/SDK/manifest packages,
 and follows inherited shell theme inside Shadow DOM. No Core source imports.
 
 Native Go files-service uses the same private Unix HTTP/systemd contract as

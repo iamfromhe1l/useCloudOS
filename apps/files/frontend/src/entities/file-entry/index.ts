@@ -32,6 +32,8 @@ export function useEntries(path: string, sort: string, hidden: boolean, offset: 
   })
   return useQuery({
     queryKey: [...fileKeys.all, 'entries', path, sort, hidden, offset],
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[2] === path ? previous : undefined,
     queryFn: () =>
       api.request<{ entries: FileEntry[]; total: number; offset: number; limit: number }>(
         '/entries?' + params,
