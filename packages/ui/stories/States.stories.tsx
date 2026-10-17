@@ -15,9 +15,6 @@ export const Error: Story = {
 }
 export const Empty: Story = {
   render: () => (
-    <EmptyState
-      title="No containers found"
-      message="Containers created in the VM will appear here."
-    />
+    <EmptyState title="Nothing here yet" message="Items will appear here when available." />
   ),
 }

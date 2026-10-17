@@ -11,6 +11,38 @@ import { Switch, SegmentedControl } from '@usecloud/ui/selection'
 import '@usecloud/ui/css'
 ```
 
+## Design System 2.0 (0.2.0)
+
+`Button` aliases the compatible historical `PillButton`; ordinary action shape is
+16px, not rounded-full. `IconButton` requires `label` and `icon` plus native button
+props. Use it for real icon actions, never static window identity. React 19 refs
+are forwarded as props for Radix composition and focus restoration.
+
+| Public primitive | API                              | Use / not use                                         | Accessibility / story                                         |
+| ---------------- | -------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------- |
+| Skeleton         | div props/className              | Initial absence only; not background refresh          | Decorative; parent live status; Foundations/Design System 2.0 |
+| Spinner          | label/className                  | Action pending only; not idle decoration              | Named status, reduced motion; overview                        |
+| Progress         | value/label                      | Measured 0–100 work; not invented install percentages | Bounded progressbar; overview                                 |
+| TextField        | label + native input props       | Simple text/search/auth fields; no domain fetch       | Generated input id and labelled focus; overview               |
+| IconButton       | label/icon + native button props | 44px named action; not fake window controls           | Native button; overview                                       |
+
+`@usecloud/ui/overlays` exports Radix namespaces Dialog, DropdownMenu, ContextMenu,
+AlertDialog and Popover. Themed MenuContent, ContextMenuContent and PopoverContent
+portal into PortalProvider's container. menuItemClass/menuSeparatorClass style
+the corresponding Radix children. This keeps behavior stable and heavy overlays
+out of initial shell imports. ObjectMenus and Popups stories document keyboard,
+disabled and destructive states. Do not put domain action decisions in this API.
+Do not mix direct Radix Dialog imports with these bundled overlays in one
+consumer; sharing the public entry keeps focus/layer coordination consistent.
+
+Import compiled UI CSS **before** your own Tailwind import so consumer responsive
+utilities remain authoritative. Shadow apps must provide PortalProvider; CSS
+variables inherit from Core. Overlay content needs an accessible heading/label
+where appropriate. AlertDialog requires Title, Description and safe Cancel.
+
+All stories use the dark/light toolbar. Review long content, keyboard focus,
+disabled/pending and destructive variants; semantic tokens remain mandatory.
+
 Compiled CSS is shipped with the package, so consumers do not guess Tailwind
 content globs. Tailwind consumers may also import @usecloud/theme/tailwind for
 their own semantic utilities. Core supplies inherited --uc-* theme variables.

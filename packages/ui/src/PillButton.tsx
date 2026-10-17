@@ -1,10 +1,10 @@
 import { cva, type VariantProps } from 'class-variance-authority'
-import type { ButtonHTMLAttributes, PropsWithChildren, ReactNode } from 'react'
+import type { ButtonHTMLAttributes, PropsWithChildren, ReactNode, Ref } from 'react'
 
 import { cn } from './lib/cn'
 
 const variants = cva(
-  'pill-button inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-3.5 text-label-large font-semibold transition-[opacity,transform] duration-motion-short focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45',
+  'pill-button inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-shape-medium px-4 text-label-large font-semibold transition-[opacity,transform,background-color,color] duration-motion-short active:scale-[0.97] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45 motion-reduce:transform-none',
   {
     variants: {
       tone: {
@@ -26,6 +26,7 @@ const variants = cva(
 interface PillButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof variants> {
   icon?: ReactNode
+  ref?: Ref<HTMLButtonElement>
 }
 
 export function PillButton({

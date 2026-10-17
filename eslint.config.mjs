@@ -39,7 +39,7 @@ const architecture = {
         const packageDeep =
           specifier.startsWith('@usecloud/') &&
           specifier.split('/').length > 2 &&
-          !/^@usecloud\/(app-sdk\/react|ui\/(selection|css)|theme\/(css|tailwind|typography)|manifest\/schema)$/.test(
+          !/^@usecloud\/(app-sdk\/react|ui\/(selection|css|overlays)|theme\/(css|tailwind|typography)|manifest\/schema)$/.test(
             specifier,
           )
         if (crossPrivate || packageDeep) context.report({ node, messageId: 'boundary' })

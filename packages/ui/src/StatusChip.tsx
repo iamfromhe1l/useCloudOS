@@ -4,7 +4,7 @@ import type { PropsWithChildren } from 'react'
 import { cn } from './lib/cn'
 
 const variants = cva(
-  'status-chip inline-flex min-h-7 items-center gap-2 rounded-full px-2.5 text-label-medium font-semibold capitalize',
+  'status-chip inline-flex min-h-7 max-w-full items-center gap-2 rounded-full px-2.5 py-1 text-label-medium font-semibold [overflow-wrap:anywhere]',
   {
     variants: {
       tone: {
@@ -26,7 +26,7 @@ interface StatusChipProps extends VariantProps<typeof variants> {
 export function StatusChip({ children, tone, className }: PropsWithChildren<StatusChipProps>) {
   return (
     <span className={cn(variants({ tone }), className)}>
-      <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
+      <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-current" />
       {children}
     </span>
   )

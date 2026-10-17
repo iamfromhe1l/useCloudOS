@@ -3,9 +3,26 @@ import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { describe, expect, it } from 'vitest'
 
-import { ErrorState, PillButton, StatusChip } from '../src/index'
+import { ErrorState, OverflowText, PillButton, Progress, StatusChip, TextField } from '../src/index'
 import { SegmentedControl, Switch } from '../src/selection'
 describe('public UI behavior', () => {
+  it('keeps static identity noninteractive and fields/progress accessible', () => {
+    render(
+      <>
+        <h1>
+          <OverflowText text="Application identity" />
+        </h1>
+        <TextField label="Search" />
+        <Progress value={140} label="Transfer" />
+      </>,
+    )
+    expect(screen.queryByRole('button', { name: 'Application identity' })).not.toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Search' })).toBeVisible()
+    expect(screen.getByRole('progressbar', { name: 'Transfer' })).toHaveAttribute(
+      'aria-valuenow',
+      '100',
+    )
+  })
   it('provides accessible native actions and feedback', () => {
     render(
       <>

@@ -15,4 +15,6 @@
   --type-caption: 500 0.75rem/1.4 var(--font-sans);
   --type-mono-md: 400 0.875rem/1.5 var(--font-mono);
   --type-mono-sm: 400 0.8125rem/1.5 var(--font-mono);
+  --type-metric-lg: 550 3rem/1.05 var(--font-sans);
+  --type-metric-md: 550 2.125rem/1.1 var(--font-sans);
 }

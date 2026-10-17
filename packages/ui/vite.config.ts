@@ -8,7 +8,7 @@ export default defineConfig({
     emptyOutDir: true,
     cssCodeSplit: false,
     lib: {
-      entry: { index: 'src/index.ts', selection: 'src/selection.ts' },
+      entry: { index: 'src/index.ts', selection: 'src/selection.ts', overlays: 'src/overlays.tsx' },
       formats: ['es'],
       fileName: (_format, name) => name + '.js',
       cssFileName: 'style',

@@ -3,8 +3,37 @@
 @source './';
 
 @layer base {
+  button,
+  [role='menuitem'],
+  [role='menuitemradio'],
+  [role='menuitemcheckbox'] {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled='true'] {
+    cursor: default;
+  }
   :where(button, a, input, [role='tab']):focus-visible {
     outline: 2px solid var(--uc-primary);
     outline-offset: 3px;
+  }
+}
+.uc-popup {
+  animation: uc-popup-enter var(--motion-fast, 120ms) ease-out;
+  transform-origin: var(--radix-dropdown-menu-content-transform-origin, center);
+}
+@keyframes uc-popup-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .uc-popup {
+    animation: none;
   }
 }
